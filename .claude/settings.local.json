@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(npx supabase:*)",
+      "Bash(clip.exe:*)",
+      "Bash(grep:*)",
+      "Bash(npx next:*)",
+      "Bash(git:*)"
+    ]
+  }
+}

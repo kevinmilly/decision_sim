@@ -1,0 +1,3561 @@
+[
+  {
+    "domain": "debugging",
+    "difficulty": 2,
+    "prompt": "Your Node.js API returns 200 OK but the response body is empty. Logs show the database query returns data. What's the most likely cause?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The response is being sent before the async query completes"
+      },
+      {
+        "key": "B",
+        "text": "The database connection pool is exhausted"
+      },
+      {
+        "key": "C",
+        "text": "The response Content-Type header is wrong"
+      },
+      {
+        "key": "D",
+        "text": "The client is caching a previous empty response"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "An async/await issue — the response sends before the query resolves, resulting in an empty body despite the query working.",
+    "reveal_detail": "This is a classic async bug. If you forget to await a database call or use .then() without properly chaining the response, Express will send the response synchronously (empty) while the query completes in the background. The logs show data because the query does eventually resolve — just after the response is already sent.",
+    "tags": [
+      "async",
+      "node.js",
+      "api"
+    ],
+    "nudge_framework": "Timeline Analysis",
+    "nudge_text": "Map the execution order — when does each line actually run?"
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 3,
+    "prompt": "You're designing a system that needs to process 10,000 orders/second with exactly-once delivery guarantees. Which architecture fits best?",
+    "options": [
+      {
+        "key": "A",
+        "text": "REST API with database transactions"
+      },
+      {
+        "key": "B",
+        "text": "Message queue with idempotent consumers"
+      },
+      {
+        "key": "C",
+        "text": "GraphQL subscriptions with WebSocket"
+      },
+      {
+        "key": "D",
+        "text": "gRPC streaming with client-side deduplication"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 90,
+    "reveal_summary": "Message queues with idempotent consumers provide at-least-once delivery, and idempotency keys ensure effective exactly-once processing.",
+    "reveal_detail": "True exactly-once is nearly impossible in distributed systems, but idempotent consumers with a message queue (e.g., Kafka, SQS) achieve effectively-once processing. Each message gets a unique ID; the consumer checks if it's already processed before acting. This scales horizontally and handles failures gracefully. REST can't sustain 10K/s easily, and GraphQL/gRPC don't solve the delivery guarantee problem.",
+    "tags": [
+      "distributed-systems",
+      "message-queues",
+      "scalability"
+    ],
+    "nudge_framework": "CAP Theorem",
+    "nudge_text": "Consider which guarantees (consistency, availability, partition tolerance) matter most."
+  },
+  {
+    "domain": "incident-response",
+    "difficulty": 2,
+    "prompt": "Production database CPU is at 98% and climbing. Queries are timing out. What's your FIRST action?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Kill the long-running queries immediately"
+      },
+      {
+        "key": "B",
+        "text": "Scale up the database instance"
+      },
+      {
+        "key": "C",
+        "text": "Identify which queries are consuming the most CPU"
+      },
+      {
+        "key": "D",
+        "text": "Failover to the read replica"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 75,
+    "reveal_summary": "Before acting, identify the root cause. Check pg_stat_activity or SHOW PROCESSLIST to find the expensive queries driving CPU usage.",
+    "reveal_detail": "Killing queries blindly might terminate critical transactions and cause data inconsistency. Scaling takes too long for an active incident. Failing over to a replica won't help if the same queries follow. First, identify the culprit queries — it might be a missing index, a runaway migration, or a sudden traffic spike. Then you can make an informed decision about whether to kill, optimize, or redirect.",
+    "tags": [
+      "databases",
+      "monitoring",
+      "triage"
+    ],
+    "nudge_framework": "OODA Loop",
+    "nudge_text": "Observe and orient before deciding and acting."
+  },
+  {
+    "domain": "code-review",
+    "difficulty": 1,
+    "prompt": "A teammate's PR adds a try/catch around every function body and logs 'Error occurred' with no additional context. What's the main problem?",
+    "options": [
+      {
+        "key": "A",
+        "text": "It swallows errors and hides the root cause"
+      },
+      {
+        "key": "B",
+        "text": "It's too verbose — the code is harder to read"
+      },
+      {
+        "key": "C",
+        "text": "Try/catch has performance overhead"
+      },
+      {
+        "key": "D",
+        "text": "It violates the single responsibility principle"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 92,
+    "reveal_summary": "Catching every error without rethrowing or including context makes debugging nearly impossible — errors are silently swallowed.",
+    "reveal_detail": "The fundamental problem is error suppression. When you catch an error and only log a generic message, you lose the stack trace, the error type, and any context about what went wrong. This makes production debugging extremely difficult. Errors should either be handled meaningfully, rethrown, or logged with full context (stack trace, input data, function name).",
+    "tags": [
+      "error-handling",
+      "logging",
+      "best-practices"
+    ],
+    "nudge_framework": "Second-Order Thinking",
+    "nudge_text": "What happens when this code fails at 2 AM and you need to debug it?"
+  },
+  {
+    "domain": "performance",
+    "difficulty": 3,
+    "prompt": "Your React app's list of 10,000 items is janky when scrolling. The items are simple text rows. What's the most impactful fix?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Add React.memo to each list item"
+      },
+      {
+        "key": "B",
+        "text": "Implement virtualized rendering (e.g., react-window)"
+      },
+      {
+        "key": "C",
+        "text": "Use useMemo for the list data"
+      },
+      {
+        "key": "D",
+        "text": "Switch to CSS contain: strict on the container"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 95,
+    "reveal_summary": "Virtualization only renders visible items (typically 20-30), reducing DOM nodes from 10,000 to ~30 and eliminating jank.",
+    "reveal_detail": "With 10K DOM nodes, the browser struggles with layout, paint, and compositing during scroll. React.memo prevents re-renders but doesn't reduce the DOM size. useMemo caches data but the DOM is still huge. CSS containment helps but doesn't address the fundamental problem. Virtualization (react-window, react-virtuoso) only renders items in the viewport, keeping the DOM small regardless of list size.",
+    "tags": [
+      "react",
+      "rendering",
+      "dom"
+    ],
+    "nudge_framework": "Bottleneck Analysis",
+    "nudge_text": "Find the single constraint that limits the whole system's throughput."
+  },
+  {
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Your API accepts a user-provided URL to fetch and display an image preview. What's the primary security risk?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Cross-site scripting (XSS)"
+      },
+      {
+        "key": "B",
+        "text": "Server-Side Request Forgery (SSRF)"
+      },
+      {
+        "key": "C",
+        "text": "SQL injection"
+      },
+      {
+        "key": "D",
+        "text": "Denial of service via large files"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 93,
+    "reveal_summary": "SSRF lets attackers make your server request internal resources (metadata APIs, databases) by providing internal URLs.",
+    "reveal_detail": "When your server fetches a user-provided URL, an attacker can supply internal network addresses (e.g., http://169.254.169.254 for cloud metadata, http://localhost:6379 for Redis). This can expose credentials, internal services, and sensitive data. Mitigations include allowlisting domains, blocking private IP ranges, and using a sandboxed fetcher. DoS is a secondary concern; SSRF is the critical vulnerability.",
+    "tags": [
+      "ssrf",
+      "input-validation",
+      "web-security"
+    ],
+    "nudge_framework": "Threat Modeling",
+    "nudge_text": "Ask: what can an attacker control, and what can the server access?"
+  },
+  {
+    "domain": "testing",
+    "difficulty": 2,
+    "prompt": "You're writing tests for a function that calls an external payment API. What's the best testing approach?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Call the real payment API in a sandbox environment"
+      },
+      {
+        "key": "B",
+        "text": "Mock the API client and test your function's logic"
+      },
+      {
+        "key": "C",
+        "text": "Skip testing this function since it depends on external services"
+      },
+      {
+        "key": "D",
+        "text": "Record real API responses and replay them in tests"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 80,
+    "reveal_summary": "Mocking the API client isolates your business logic, keeps tests fast and deterministic, and doesn't depend on external availability.",
+    "reveal_detail": "Unit tests should be fast, reliable, and isolated. Mocking the payment client lets you test all your logic branches (success, failure, timeout, invalid response) without hitting a real API. Sandbox environments are useful for integration tests but are slow and can be flaky. Recording/replaying (option D) is valid but more complex to maintain. The key is testing YOUR code's behavior, not the payment provider's API.",
+    "tags": [
+      "unit-testing",
+      "mocking",
+      "external-apis"
+    ],
+    "nudge_framework": "Test Pyramid",
+    "nudge_text": "Unit tests at the base — fast, many, isolated. Integration tests above — fewer, slower."
+  },
+  {
+    "domain": "deployment",
+    "difficulty": 3,
+    "prompt": "You're deploying a database migration that adds a NOT NULL column to a table with 50M rows in a zero-downtime environment. What's the safest approach?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Add the column as nullable, backfill data, then add the NOT NULL constraint"
+      },
+      {
+        "key": "B",
+        "text": "Run ALTER TABLE ADD COLUMN NOT NULL with a DEFAULT value"
+      },
+      {
+        "key": "C",
+        "text": "Create a new table, copy data, then swap table names"
+      },
+      {
+        "key": "D",
+        "text": "Take a brief maintenance window — it'll be quick"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Multi-step migration: add nullable column → backfill in batches → add NOT NULL constraint. This avoids locking the table.",
+    "reveal_detail": "Adding a NOT NULL column directly on 50M rows can lock the table for minutes or hours depending on the database. The safe approach is: (1) add column as nullable (instant in Postgres 11+), (2) backfill in batches of ~10K rows to avoid lock contention, (3) add NOT NULL constraint with NOT VALID then VALIDATE separately. Option B works in Postgres 11+ for some cases but isn't universally safe. Option C (table swap) is overkill. Option D violates zero-downtime.",
+    "tags": [
+      "migrations",
+      "postgres",
+      "zero-downtime"
+    ],
+    "nudge_framework": "Reversibility Check",
+    "nudge_text": "Can you undo this change safely if something goes wrong mid-migration?"
+  },
+  {
+    "domain": "tech-debt",
+    "difficulty": 2,
+    "prompt": "Your codebase has a 3,000-line 'utils.ts' file that every module imports from. The team wants to refactor. What's the best first step?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Rewrite it from scratch with proper modules"
+      },
+      {
+        "key": "B",
+        "text": "Map the dependency graph to understand what depends on what"
+      },
+      {
+        "key": "C",
+        "text": "Split it alphabetically into smaller files"
+      },
+      {
+        "key": "D",
+        "text": "Add TypeScript strict mode to catch issues first"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 82,
+    "reveal_summary": "Understanding the dependency graph reveals natural module boundaries and high-risk areas before you start moving code.",
+    "reveal_detail": "A giant utils file usually has clusters of related functions. Mapping imports shows which functions are used together, which modules are the heaviest consumers, and where circular dependencies might form during the split. Rewriting from scratch is risky — you'll break things. Alphabetical splitting ignores logical cohesion. TypeScript strict mode helps but doesn't guide the restructuring. Start with understanding, then split along natural domain boundaries.",
+    "tags": [
+      "refactoring",
+      "modularity",
+      "dependency-management"
+    ],
+    "nudge_framework": "Strangler Fig Pattern",
+    "nudge_text": "Gradually replace the old structure by routing new code through the new modules."
+  },
+  {
+    "domain": "hiring",
+    "difficulty": 3,
+    "prompt": "You're interviewing a senior engineer candidate. They can't solve a LeetCode medium but explain a complex system design with deep trade-off analysis. How should you evaluate them?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Reject — algorithm skills are fundamental for senior roles"
+      },
+      {
+        "key": "B",
+        "text": "Strong hire — system design and trade-off thinking matter more at senior level"
+      },
+      {
+        "key": "C",
+        "text": "Proceed but add a follow-up coding round to verify"
+      },
+      {
+        "key": "D",
+        "text": "Hire for a design-focused role but not a general senior role"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 70,
+    "reveal_summary": "A follow-up round gives the fairest signal — one coding interview has high variance, but coding ability still matters for senior ICs.",
+    "reveal_detail": "Senior engineers need both system thinking and implementation ability. One failed coding problem is noisy — nerves, unfamiliar problem type, or time pressure can cause false negatives. But ignoring coding entirely risks hiring someone who can't deliver. A follow-up round (perhaps pair programming on a real problem) gives a better signal. The system design strength is genuinely valuable and shouldn't be dismissed because of one algorithm interview.",
+    "tags": [
+      "interviewing",
+      "evaluation",
+      "signal-vs-noise"
+    ],
+    "nudge_framework": "Base Rate Thinking",
+    "nudge_text": "How often do strong senior engineers fail a single coding interview? Higher than you'd think."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 3,
+    "prompt": "A memory leak in your Java service causes OOM crashes every 48 hours. Heap dumps show thousands of instances of a listener class. What's the most likely cause?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Event listeners are registered but never unregistered"
+      },
+      {
+        "key": "B",
+        "text": "The garbage collector is misconfigured"
+      },
+      {
+        "key": "C",
+        "text": "Thread pool threads are not being released"
+      },
+      {
+        "key": "D",
+        "text": "Large strings are being interned unnecessarily"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 90,
+    "reveal_summary": "Listener objects accumulate because each registration holds a strong reference, preventing GC from collecting them.",
+    "reveal_detail": "This is a textbook memory leak pattern in Java. When you register an event listener (e.g., via addListener(), subscribe(), or on()), the event source holds a strong reference to the listener. If listeners are registered on every request or operation but never removed, they accumulate indefinitely. The heap dump showing thousands of listener instances is the smoking gun. Fix: ensure listeners are removed in cleanup/dispose methods, or use weak references.",
+    "tags": [
+      "memory-leaks",
+      "java",
+      "event-listeners"
+    ],
+    "nudge_framework": "Resource Lifecycle",
+    "nudge_text": "Every resource that's acquired must have a corresponding release path."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 4,
+    "prompt": "Your microservice architecture has 15 services. Latency spikes occur randomly but correlate with deploy times of unrelated services. What's the likely root cause?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Service mesh sidecar proxy restarts during deploys"
+      },
+      {
+        "key": "B",
+        "text": "DNS cache invalidation from service discovery updates"
+      },
+      {
+        "key": "C",
+        "text": "Shared database connections being dropped"
+      },
+      {
+        "key": "D",
+        "text": "Container orchestrator rebalancing pods across nodes"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 72,
+    "reveal_summary": "When services deploy, their IPs change in service discovery. DNS caches across all services expire and re-resolve, causing brief latency spikes.",
+    "reveal_detail": "In microservice architectures with DNS-based service discovery (common with Kubernetes, Consul, etc.), deploying one service changes its pod IPs. This triggers DNS record updates that ripple through the system as other services' DNS caches expire. During the re-resolution window, requests may timeout or fail. This explains why unrelated services see latency — they all share the DNS resolution layer. Mitigations: longer DNS TTLs, client-side connection pooling, or switching to direct service mesh routing.",
+    "tags": [
+      "microservices",
+      "dns",
+      "latency",
+      "service-discovery"
+    ],
+    "nudge_framework": "Shared Dependencies",
+    "nudge_text": "When unrelated things break together, look for what they share."
+  },
+  {
+    "domain": "incident-response",
+    "difficulty": 3,
+    "prompt": "During a P1 incident, a junior engineer pushes a 'fix' that makes the problem worse. The team lead publicly criticizes them in the incident channel. What should you do?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Focus on fixing the incident first, address the behavior in the postmortem"
+      },
+      {
+        "key": "B",
+        "text": "Privately message the team lead to stop immediately"
+      },
+      {
+        "key": "C",
+        "text": "Publicly defend the junior engineer in the channel"
+      },
+      {
+        "key": "D",
+        "text": "Revert the junior's change and move on without comment"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 75,
+    "reveal_summary": "During a P1, the incident takes priority. Blame culture issues should be addressed in the blameless postmortem, not during the crisis.",
+    "reveal_detail": "Public confrontation during an active incident adds chaos and emotional distraction. The priority is restoring service. Revert the bad change, continue troubleshooting, and note the behavior for the postmortem. In the postmortem, establish that blameless culture means focusing on process failures (why could a junior push without review during an incident?) rather than individual mistakes. Address the team lead's behavior privately after the incident is resolved.",
+    "tags": [
+      "incident-management",
+      "team-dynamics",
+      "blameless-culture"
+    ],
+    "nudge_framework": "Eisenhower Matrix",
+    "nudge_text": "Urgent+Important (the incident) before Important+Not-Urgent (culture issues)."
+  },
+  {
+    "domain": "code-review",
+    "difficulty": 2,
+    "prompt": "A PR introduces a new REST endpoint that returns user data. The endpoint doesn't check if the requesting user has permission to view the target user's data. What vulnerability is this?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Broken Authentication"
+      },
+      {
+        "key": "B",
+        "text": "Insecure Direct Object Reference (IDOR)"
+      },
+      {
+        "key": "C",
+        "text": "Cross-Site Request Forgery (CSRF)"
+      },
+      {
+        "key": "D",
+        "text": "Information Disclosure"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 90,
+    "reveal_summary": "IDOR — the user can access any user's data by changing the ID parameter because authorization isn't checked.",
+    "reveal_detail": "Insecure Direct Object Reference (IDOR) occurs when an application exposes internal object references (like user IDs) without verifying that the current user is authorized to access them. If GET /api/users/123 returns user 123's data to anyone who's authenticated, any logged-in user can enumerate and access all user data. The fix: always check that auth.userId matches the requested resource or that the user has explicit permission.",
+    "tags": [
+      "authorization",
+      "idor",
+      "api-security"
+    ],
+    "nudge_framework": "Principle of Least Privilege",
+    "nudge_text": "Every request should prove it has permission — don't assume authentication equals authorization."
+  },
+  {
+    "domain": "performance",
+    "difficulty": 4,
+    "prompt": "Your PostgreSQL query was fast but slowed from 5ms to 2s after the table grew from 100K to 10M rows. EXPLAIN shows a sequential scan. The WHERE clause filters on an indexed column. Why isn't the index being used?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The query planner estimates the filter will match too many rows, making a seq scan cheaper"
+      },
+      {
+        "key": "B",
+        "text": "The index is corrupted and needs to be rebuilt"
+      },
+      {
+        "key": "C",
+        "text": "PostgreSQL doesn't use indexes on tables over 1M rows"
+      },
+      {
+        "key": "D",
+        "text": "The column type changed and no longer matches the index"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "When the planner estimates a large % of rows match the filter, it chooses a sequential scan over index scan because random I/O is costlier than sequential I/O.",
+    "reveal_detail": "PostgreSQL's query planner makes cost-based decisions. If statistics (pg_stats) indicate the WHERE clause matches more than ~5-10% of the table, a sequential scan is actually faster than the random I/O pattern of an index scan. Common causes: stale statistics (run ANALYZE), low-cardinality columns, or implicit type casting that prevents index use. Check with EXPLAIN (ANALYZE, BUFFERS) and ensure statistics are current.",
+    "tags": [
+      "postgres",
+      "query-optimization",
+      "index-usage"
+    ],
+    "nudge_framework": "First Principles",
+    "nudge_text": "Understand the cost model — sequential reads are cheaper per-row than random index lookups."
+  },
+  {
+    "domain": "security",
+    "difficulty": 3,
+    "prompt": "Your team stores API keys in environment variables on the server. A new developer asks if this is secure enough. What's the biggest risk with this approach?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Environment variables can leak in error logs and debug endpoints"
+      },
+      {
+        "key": "B",
+        "text": "They're stored in plaintext in process memory"
+      },
+      {
+        "key": "C",
+        "text": "Other processes on the same machine can read them"
+      },
+      {
+        "key": "D",
+        "text": "They persist in shell history if set manually"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 78,
+    "reveal_summary": "Env vars commonly leak through error pages, crash dumps, debug endpoints (/env, /debug), and logging frameworks that dump the environment.",
+    "reveal_detail": "While all options are valid concerns, the most common real-world leak vector is accidental exposure in logs and debug endpoints. Frameworks like Spring Boot's Actuator expose /env by default. Error handling code often dumps the environment for debugging. Crash reporters attach env vars to reports. The fix: use a secrets manager (AWS Secrets Manager, Vault), audit all logging/error-reporting code, and never expose debug endpoints in production.",
+    "tags": [
+      "secrets-management",
+      "env-vars",
+      "information-leakage"
+    ],
+    "nudge_framework": "Attack Surface Analysis",
+    "nudge_text": "List every place the secret could be read from — not just where you put it."
+  },
+  {
+    "domain": "testing",
+    "difficulty": 3,
+    "prompt": "Your test suite takes 45 minutes to run. The team starts skipping tests before merging. What's the highest-impact improvement?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Parallelize the test suite across multiple workers"
+      },
+      {
+        "key": "B",
+        "text": "Run only affected tests based on changed files"
+      },
+      {
+        "key": "C",
+        "text": "Move slow integration tests to a nightly pipeline"
+      },
+      {
+        "key": "D",
+        "text": "Delete flaky tests to speed up the suite"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 75,
+    "reveal_summary": "Affected-test analysis (e.g., Jest --changedSince, Nx affected) runs only tests related to changed code, cutting time from 45min to minutes.",
+    "reveal_detail": "When tests take too long, developers skip them — making the suite useless. Affected-test detection uses dependency graphs to run only tests that could be impacted by the change. This often reduces 45 minutes to 2-5 minutes for typical PRs. Parallelization helps but still runs all tests. Moving tests to nightly means bugs are found late. Deleting flaky tests just hides quality issues. The key insight: most changes affect a small % of the codebase.",
+    "tags": [
+      "ci-cd",
+      "test-optimization",
+      "developer-experience"
+    ],
+    "nudge_framework": "Pareto Principle",
+    "nudge_text": "Most commits affect <5% of tests — only run those."
+  },
+  {
+    "domain": "deployment",
+    "difficulty": 2,
+    "prompt": "You're choosing between blue-green deployment and canary deployment for a critical service. The service has stateful WebSocket connections. Which is better?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Blue-green — instant switchover minimizes disruption"
+      },
+      {
+        "key": "B",
+        "text": "Canary — gradual rollout catches issues before full deployment"
+      },
+      {
+        "key": "C",
+        "text": "Neither — use rolling deployment instead"
+      },
+      {
+        "key": "D",
+        "text": "Blue-green with connection draining before switchover"
+      }
+    ],
+    "correct_option": "D",
+    "answer_defensibility": 80,
+    "reveal_summary": "Blue-green with connection draining gracefully migrates WebSocket clients before switching, avoiding mass disconnections.",
+    "reveal_detail": "Stateful WebSocket connections complicate deployments. Pure blue-green instantly drops all connections. Canary splits traffic but means some users have old connections while others are new — complex with WebSockets. The best approach: blue-green with a draining period where the old environment stops accepting new connections while existing connections gracefully close (via application-level disconnect + reconnect signals). This gives clean switchover without abrupt drops.",
+    "tags": [
+      "deployment-strategies",
+      "websockets",
+      "stateful-services"
+    ],
+    "nudge_framework": "Graceful Degradation",
+    "nudge_text": "Design transitions that give existing sessions time to complete."
+  },
+  {
+    "domain": "tech-debt",
+    "difficulty": 3,
+    "prompt": "Your team inherits a legacy codebase with zero tests. Management wants new features immediately. How do you balance feature work with adding test coverage?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Pause features for 2 weeks to add test coverage"
+      },
+      {
+        "key": "B",
+        "text": "Write tests only for new code and code you modify"
+      },
+      {
+        "key": "C",
+        "text": "Skip tests — ship features and add tests later"
+      },
+      {
+        "key": "D",
+        "text": "Hire a QA team to write tests separately"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 88,
+    "reveal_summary": "The 'boy scout rule' for tests — cover what you touch. This incrementally improves coverage without blocking feature delivery.",
+    "reveal_detail": "This is the pragmatic balance. Pausing features isn't realistic when there's business pressure. Skipping tests perpetuates the problem. Writing tests for every changed/new file means coverage grows organically in the areas that matter most (actively changed code). Over months, the most important paths get covered. Pair this with characterization tests for critical legacy code you need to modify. Michael Feathers' 'Working Effectively with Legacy Code' formalized this approach.",
+    "tags": [
+      "legacy-code",
+      "testing-strategy",
+      "pragmatism"
+    ],
+    "nudge_framework": "Incremental Progress",
+    "nudge_text": "You don't need 100% coverage — you need coverage where it matters."
+  },
+  {
+    "domain": "hiring",
+    "difficulty": 2,
+    "prompt": "Two candidates for a mid-level role: one has 5 years at the same company, the other has 2 years across 4 companies. Neither is clearly stronger technically. What's the more important question to ask?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Why did the job-hopper leave each role?"
+      },
+      {
+        "key": "B",
+        "text": "What depth of impact did each candidate achieve?"
+      },
+      {
+        "key": "C",
+        "text": "Would the long-tenured candidate get bored at our company?"
+      },
+      {
+        "key": "D",
+        "text": "Can the job-hopper commit to staying at least 2 years?"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 82,
+    "reveal_summary": "Depth of impact matters more than tenure pattern. Someone can have 5 years of shallow work or 6 months of deep, high-impact contributions.",
+    "reveal_detail": "Tenure length is a noisy signal. The long-tenured person might have coasted, and the job-hopper might have been driven by learning and growth. The real question is impact: Did they ship something meaningful? Did they grow the team's capabilities? Did they solve hard problems? Ask both candidates to describe their deepest technical contribution and what they learned. This reveals far more than resume patterns.",
+    "tags": [
+      "interviewing",
+      "candidate-evaluation",
+      "impact"
+    ],
+    "nudge_framework": "Signal vs Noise",
+    "nudge_text": "Tenure is noise. Impact and growth trajectory are signal."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 1,
+    "prompt": "A CSS button looks correct in Chrome but the padding is wrong in Safari. What's the most common cause?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Safari uses a different default stylesheet for form elements"
+      },
+      {
+        "key": "B",
+        "text": "Safari doesn't support the padding property on buttons"
+      },
+      {
+        "key": "C",
+        "text": "The CSS file isn't loading in Safari due to caching"
+      },
+      {
+        "key": "D",
+        "text": "Safari interprets box-sizing differently"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "Safari applies its own user-agent stylesheet to form elements (buttons, inputs, selects), often overriding your padding with -webkit-appearance defaults.",
+    "reveal_detail": "Safari's user-agent stylesheet for form elements is notoriously opinionated. Buttons get default -webkit-appearance: button which applies system-level styling including padding. The fix: add -webkit-appearance: none; appearance: none; to your button styles, then apply your own padding. This is a common cross-browser gotcha that CSS resets (like Normalize.css) partially address.",
+    "tags": [
+      "css",
+      "cross-browser",
+      "safari"
+    ],
+    "nudge_framework": "Default Assumptions",
+    "nudge_text": "When behavior differs between environments, check what defaults each environment applies."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 2,
+    "prompt": "You need to add full-text search to your app. Your PostgreSQL database has 500K documents. Should you add Elasticsearch?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Yes — Elasticsearch is the standard for full-text search"
+      },
+      {
+        "key": "B",
+        "text": "No — use PostgreSQL's built-in full-text search (tsvector/tsquery)"
+      },
+      {
+        "key": "C",
+        "text": "Use a managed search service like Algolia instead"
+      },
+      {
+        "key": "D",
+        "text": "Build a simple LIKE query with trigram indexes"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 80,
+    "reveal_summary": "At 500K documents, PostgreSQL's native full-text search with tsvector/GIN indexes handles the load without the operational complexity of Elasticsearch.",
+    "reveal_detail": "Elasticsearch adds significant operational burden: cluster management, index syncing, data consistency challenges. PostgreSQL's built-in full-text search with GIN indexes handles millions of documents with good performance. At 500K docs, it's absolutely sufficient. Use tsvector columns with GIN indexes, ts_rank for relevance scoring, and websearch_to_tsquery for user-friendly queries. Reserve Elasticsearch for cases where you need advanced features like fuzzy matching, facets, or sub-50ms search across billions of documents.",
+    "tags": [
+      "search",
+      "postgres",
+      "complexity-management"
+    ],
+    "nudge_framework": "YAGNI",
+    "nudge_text": "Don't add infrastructure complexity for a problem your current tools can solve."
+  },
+  {
+    "domain": "incident-response",
+    "difficulty": 4,
+    "prompt": "Your monitoring shows a gradual 10% increase in error rate over 3 days. No deployments occurred. CPU and memory are normal. What should you investigate first?",
+    "options": [
+      {
+        "key": "A",
+        "text": "External dependency health — check if a third-party API is degrading"
+      },
+      {
+        "key": "B",
+        "text": "Data growth — check if a table or queue is approaching capacity"
+      },
+      {
+        "key": "C",
+        "text": "Certificate expiration — check if a TLS cert is about to expire"
+      },
+      {
+        "key": "D",
+        "text": "Traffic pattern changes — check if bot traffic is increasing"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 72,
+    "reveal_summary": "A gradual error increase without deploys often indicates an external dependency slowly degrading — increased timeouts, rate limits, or partial outages.",
+    "reveal_detail": "The gradual slope over 3 days rules out most internal causes (which would show sudden changes). External API degradation often manifests as slowly increasing timeout rates, approaching rate limits, or partial geographic outages. Check: external API response times, retry rates, error distributions by endpoint. Other options are plausible but less likely to cause a smooth 3-day ramp. Data growth would more likely cause sudden threshold-crossing failures.",
+    "tags": [
+      "monitoring",
+      "external-dependencies",
+      "gradual-degradation"
+    ],
+    "nudge_framework": "Rate of Change Analysis",
+    "nudge_text": "A gradual slope has different causes than a sudden cliff — match the pattern to the cause."
+  },
+  {
+    "domain": "code-review",
+    "difficulty": 3,
+    "prompt": "A PR adds a caching layer with a 24-hour TTL. The cached data includes user permissions. What's the main concern?",
+    "options": [
+      {
+        "key": "A",
+        "text": "24 hours is too long — users with revoked permissions retain access"
+      },
+      {
+        "key": "B",
+        "text": "Cache invalidation is hard — the TTL might not be respected"
+      },
+      {
+        "key": "C",
+        "text": "The cache will use too much memory"
+      },
+      {
+        "key": "D",
+        "text": "Concurrent users might get stale permissions during updates"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 90,
+    "reveal_summary": "A 24h TTL on permission data means a user whose access is revoked can continue accessing resources for up to 24 hours.",
+    "reveal_detail": "Permission data is security-critical. When you cache permissions with a 24-hour TTL, revoking a user's access (e.g., after termination, role change, or security incident) doesn't take effect until the cache expires. This is a serious security gap. Solutions: use shorter TTLs (5-15 minutes), implement event-driven cache invalidation on permission changes, or don't cache permissions at all for sensitive resources. The convenience of caching must be weighed against the security implications.",
+    "tags": [
+      "caching",
+      "security",
+      "authorization",
+      "ttl"
+    ],
+    "nudge_framework": "Worst Case Scenario",
+    "nudge_text": "What happens if a fired employee's permissions are cached for 24 hours?"
+  },
+  {
+    "domain": "performance",
+    "difficulty": 2,
+    "prompt": "Your API endpoint makes 5 sequential database queries, each taking 50ms. Total response time is 300ms. How do you most effectively reduce it?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Run the 5 queries in parallel using Promise.all"
+      },
+      {
+        "key": "B",
+        "text": "Combine them into a single SQL query with JOINs"
+      },
+      {
+        "key": "C",
+        "text": "Add a Redis cache for each query result"
+      },
+      {
+        "key": "D",
+        "text": "Batch them into a single database round-trip"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 75,
+    "reveal_summary": "Combining queries into a single SQL query with JOINs reduces 5 round-trips to 1, cutting network overhead and total time significantly.",
+    "reveal_detail": "Each database query has overhead: network round-trip (~1-5ms), connection checkout, query parsing, and execution. With 5 sequential queries at 50ms each (including overhead), combining into one query eliminates 4 round-trips and lets the database optimizer handle the data retrieval efficiently. Promise.all works if queries are independent but still makes 5 round-trips. Caching adds complexity and staleness. A single well-designed JOIN query is simpler and faster. Total time drops from 300ms to ~60-80ms.",
+    "tags": [
+      "sql",
+      "query-optimization",
+      "network-overhead"
+    ],
+    "nudge_framework": "Minimize Round-Trips",
+    "nudge_text": "Every network hop has fixed overhead — reduce the number of hops."
+  },
+  {
+    "domain": "security",
+    "difficulty": 4,
+    "prompt": "Your application uses JWTs for authentication. A security audit flags that you're storing the signing key in an environment variable. What's the recommended improvement?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Use asymmetric keys (RS256) with the private key in a key management service"
+      },
+      {
+        "key": "B",
+        "text": "Encrypt the signing key before storing it in the env var"
+      },
+      {
+        "key": "C",
+        "text": "Rotate the signing key daily via a cron job"
+      },
+      {
+        "key": "D",
+        "text": "Move to session-based auth instead of JWTs"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Asymmetric signing (RS256) with the private key in a KMS means services only need the public key to verify — reducing exposure of the signing secret.",
+    "reveal_detail": "With symmetric signing (HS256), every service that verifies tokens needs the shared secret — expanding the attack surface. With asymmetric signing (RS256/ES256), only the auth service needs the private key (stored in KMS like AWS KMS or HashiCorp Vault). All other services verify with the freely-distributable public key. This follows least privilege: most services can verify but can't forge tokens. KMS also provides audit logs, automatic rotation, and hardware-backed key storage.",
+    "tags": [
+      "jwt",
+      "cryptography",
+      "key-management"
+    ],
+    "nudge_framework": "Principle of Least Privilege",
+    "nudge_text": "Only the signing service needs the private key — everyone else gets the public key."
+  },
+  {
+    "domain": "testing",
+    "difficulty": 4,
+    "prompt": "Your CI pipeline runs 2,000 tests. About 30 tests (~1.5%) fail randomly — sometimes pass, sometimes fail. The team ignores failures. What should you do first?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Quarantine the flaky tests and fix them with dedicated time"
+      },
+      {
+        "key": "B",
+        "text": "Add automatic retries to the CI pipeline"
+      },
+      {
+        "key": "C",
+        "text": "Delete the flaky tests — they provide negative value"
+      },
+      {
+        "key": "D",
+        "text": "Convert them to manual QA test cases"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Quarantine flaky tests: move them to a separate suite, keep them visible, and fix them systematically. This restores trust in the main suite.",
+    "reveal_detail": "Flaky tests are toxic — they train the team to ignore failures, which means real bugs slip through. Quarantining means: (1) move flaky tests to a separate job that doesn't block merges, (2) track flaky test metrics, (3) allocate time to fix root causes (usually timing issues, shared state, or external dependencies). Auto-retries mask the problem. Deleting loses the test's value. Manual QA doesn't scale. The goal: a green CI pipeline always means the code is good.",
+    "tags": [
+      "flaky-tests",
+      "ci-cd",
+      "test-reliability"
+    ],
+    "nudge_framework": "Broken Windows Theory",
+    "nudge_text": "If the team ignores test failures, they'll start ignoring other quality signals too."
+  },
+  {
+    "domain": "deployment",
+    "difficulty": 4,
+    "prompt": "Your team practices trunk-based development. A feature requires 3 weeks of work and touches core payment logic. How do you keep merging to main daily?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Use feature flags to hide the incomplete feature in production"
+      },
+      {
+        "key": "B",
+        "text": "Use a long-lived feature branch and merge at the end"
+      },
+      {
+        "key": "C",
+        "text": "Break the feature into backward-compatible increments"
+      },
+      {
+        "key": "D",
+        "text": "Merge daily but skip deploying until the feature is complete"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 78,
+    "reveal_summary": "Feature flags let you merge incomplete code to main daily while keeping it invisible to users. The flag is flipped when the feature is ready.",
+    "reveal_detail": "Feature flags (LaunchDarkly, Unleash, or simple config) decouple deployment from release. You merge code behind if(featureFlag('new-payment-flow')) daily, so main always has your latest work, CI runs against it, and merge conflicts are caught early. When the feature is complete, flip the flag. This is especially important for payment logic where long-lived branches create risky big-bang merges. Option C is also good but harder when changes are deeply intertwined.",
+    "tags": [
+      "feature-flags",
+      "trunk-based-development",
+      "continuous-integration"
+    ],
+    "nudge_framework": "Ship/Release Separation",
+    "nudge_text": "Shipping code to production and releasing it to users are two different decisions."
+  },
+  {
+    "domain": "tech-debt",
+    "difficulty": 4,
+    "prompt": "Your team estimates 30% of sprint velocity is lost to tech debt. The product manager says there's no time for tech debt work. What's the most effective argument?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Frame tech debt as 'feature delivery speed' — show how debt slows new features"
+      },
+      {
+        "key": "B",
+        "text": "Quote industry studies on technical debt costs"
+      },
+      {
+        "key": "C",
+        "text": "Refuse to estimate stories until tech debt is addressed"
+      },
+      {
+        "key": "D",
+        "text": "Secretly allocate 20% of sprint time to tech debt work"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "Product managers care about delivery speed. Show concrete data: 'Feature X took 2 weeks instead of 3 days because of Y tech debt.'",
+    "reveal_detail": "Abstract arguments about tech debt don't resonate with product managers. Concrete, measurable impact does. Track time spent working around tech debt for a few sprints. Then present: 'We spent 40 hours last sprint fighting flaky deploys. Fixing the deploy pipeline (3-day investment) would save 8 hours/sprint permanently.' This reframes tech debt reduction as a feature delivery accelerator, aligning engineering and product goals. Never secretly allocate time — it erodes trust.",
+    "tags": [
+      "stakeholder-management",
+      "prioritization",
+      "communication"
+    ],
+    "nudge_framework": "Speak Their Language",
+    "nudge_text": "Translate technical problems into business outcomes your stakeholder cares about."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 4,
+    "prompt": "Your service intermittently returns corrupted JSON responses. It happens under high load but never in staging. What's the most likely cause?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Shared mutable state between concurrent request handlers"
+      },
+      {
+        "key": "B",
+        "text": "JSON serialization library bug triggered by specific data"
+      },
+      {
+        "key": "C",
+        "text": "Response compression (gzip) corrupting the output"
+      },
+      {
+        "key": "D",
+        "text": "Load balancer mixing response bodies from different requests"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 80,
+    "reveal_summary": "Concurrent requests sharing a mutable buffer or object causes data races — one handler partially overwrites another's response data.",
+    "reveal_detail": "This is a classic concurrency bug. If request handlers share a mutable object (e.g., a reusable response buffer, a shared StringBuilder, or a class-level variable), concurrent requests can interleave writes, producing garbled output. It only appears under high load because you need multiple requests executing simultaneously. Staging has lower concurrency so it doesn't trigger. The fix: ensure each request handler has its own response buffer. Use ThreadLocal, request-scoped objects, or immutable data structures.",
+    "tags": [
+      "concurrency",
+      "race-conditions",
+      "data-corruption"
+    ],
+    "nudge_framework": "Concurrency Checklist",
+    "nudge_text": "If it only happens under load, suspect shared mutable state first."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 3,
+    "prompt": "You're choosing between a monorepo and polyrepo for a team of 12 engineers working on 4 services. What's the stronger argument for monorepo?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Atomic cross-service changes and shared tooling"
+      },
+      {
+        "key": "B",
+        "text": "Better code isolation between teams"
+      },
+      {
+        "key": "C",
+        "text": "Simpler CI/CD pipeline configuration"
+      },
+      {
+        "key": "D",
+        "text": "Faster git clone and smaller repo size"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 90,
+    "reveal_summary": "Monorepos enable atomic cross-service changes (one PR updates API + client), shared build/lint/test tooling, and consistent dependency versions.",
+    "reveal_detail": "At 12 engineers and 4 services, a monorepo shines because: (1) cross-service refactors happen in a single PR with atomic review, (2) shared tooling (ESLint, TypeScript config, CI scripts) is maintained once, (3) dependency versions are consistent — no 'service A uses v2, service B uses v1' drift. Options B and D favor polyrepo. CI/CD is actually more complex in monorepos (need affected-project detection). The team is small enough that monorepo coordination costs are low.",
+    "tags": [
+      "monorepo",
+      "team-structure",
+      "developer-tooling"
+    ],
+    "nudge_framework": "Conway's Law",
+    "nudge_text": "Repo structure should mirror how your teams communicate and collaborate."
+  },
+  {
+    "domain": "code-review",
+    "difficulty": 4,
+    "prompt": "A PR implements optimistic UI updates for a shopping cart. The code updates local state immediately but has no rollback logic if the API call fails. What's your review feedback?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Request rollback logic — revert local state on API failure"
+      },
+      {
+        "key": "B",
+        "text": "Approve — optimistic updates don't need rollback for non-critical flows"
+      },
+      {
+        "key": "C",
+        "text": "Request a loading spinner instead of optimistic updates"
+      },
+      {
+        "key": "D",
+        "text": "Request retry logic for the API call instead of rollback"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 92,
+    "reveal_summary": "Optimistic updates without rollback can show the user a cart with items that failed to save — they'll see incorrect totals and lose items at checkout.",
+    "reveal_detail": "A shopping cart is financially significant. If a user adds an item, sees it in their cart (optimistic update), but the API fails silently, they'll have a phantom item. When they check out, the server-side cart won't match what they see. This causes confusion, lost sales, and support tickets. Proper optimistic UI: update immediately, store the previous state, and roll back on failure with a toast notification explaining what happened. React Query and SWR have built-in optimistic mutation support.",
+    "tags": [
+      "optimistic-ui",
+      "error-handling",
+      "user-experience"
+    ],
+    "nudge_framework": "Failure Mode Analysis",
+    "nudge_text": "For every optimistic update, define what happens when the operation fails."
+  },
+  {
+    "domain": "performance",
+    "difficulty": 3,
+    "prompt": "Your Next.js app's Largest Contentful Paint (LCP) is 4.5 seconds. The hero image (2MB, PNG) is the LCP element. What's the most impactful fix?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Convert the image to WebP/AVIF and use responsive sizes with next/image"
+      },
+      {
+        "key": "B",
+        "text": "Lazy-load the hero image"
+      },
+      {
+        "key": "C",
+        "text": "Add a CDN in front of the image"
+      },
+      {
+        "key": "D",
+        "text": "Preload the image with <link rel='preload'>"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "Converting 2MB PNG to WebP/AVIF (typically 200-400KB) and serving responsive sizes via next/image dramatically reduces LCP.",
+    "reveal_detail": "A 2MB PNG is the main bottleneck. WebP is 25-35% smaller than PNG, AVIF is 50%+ smaller. next/image handles format negotiation, responsive sizes, and lazy loading automatically. Lazy-loading the hero image is actually counterproductive — it's above the fold and should load eagerly. A CDN helps with geographic latency but doesn't reduce file size. Preloading helps discovery time but not download time. The biggest win is reducing the bytes transferred.",
+    "tags": [
+      "web-vitals",
+      "lcp",
+      "image-optimization"
+    ],
+    "nudge_framework": "Measure First",
+    "nudge_text": "4.5s LCP with a 2MB image — the math is obvious. Smaller file = faster load."
+  },
+  {
+    "domain": "security",
+    "difficulty": 1,
+    "prompt": "A user reports that after logging out and pressing the browser back button, they can still see the previous page with sensitive data. What's the fix?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Add Cache-Control: no-store headers to authenticated pages"
+      },
+      {
+        "key": "B",
+        "text": "Clear localStorage on logout"
+      },
+      {
+        "key": "C",
+        "text": "Invalidate the session cookie on logout"
+      },
+      {
+        "key": "D",
+        "text": "Redirect to the login page with JavaScript on page load"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Cache-Control: no-store prevents the browser from caching authenticated pages, so the back button triggers a fresh request (which redirects to login).",
+    "reveal_detail": "When a user logs out and hits back, the browser shows the cached version of the page — it doesn't make a new request. Session invalidation (option C) is important but doesn't prevent the cached page from being displayed. Cache-Control: no-store tells the browser to never cache the response, so pressing back forces a new server request that properly redirects to login. Combine with session invalidation for defense in depth.",
+    "tags": [
+      "browser-caching",
+      "logout",
+      "session-management"
+    ],
+    "nudge_framework": "Defense in Depth",
+    "nudge_text": "Both client (cache headers) and server (session invalidation) must agree the session is over."
+  },
+  {
+    "domain": "testing",
+    "difficulty": 1,
+    "prompt": "You're writing tests for a function that formats dates. Which test case is most important to include?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Edge cases: leap years, end of month, timezone boundaries"
+      },
+      {
+        "key": "B",
+        "text": "A typical date like 2024-03-15"
+      },
+      {
+        "key": "C",
+        "text": "Performance test with 10,000 date formats"
+      },
+      {
+        "key": "D",
+        "text": "Test that the function exists and is callable"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Edge cases are where date formatting bugs hide — Feb 29, Dec 31→Jan 1, DST transitions, and timezone offsets.",
+    "reveal_detail": "Typical dates work in almost any implementation — they're not useful tests. Date formatting bugs cluster around: Feb 29 in leap years, month/year boundaries (Dec 31 to Jan 1), DST transitions (clocks skip/repeat an hour), UTC offset boundaries (date differs by timezone), and epoch edge cases. Testing 2024-03-15 gives false confidence. The function will work for 90% of dates — it's the 10% edge cases that cause production bugs and user complaints.",
+    "tags": [
+      "edge-cases",
+      "date-handling",
+      "test-design"
+    ],
+    "nudge_framework": "Boundary Value Analysis",
+    "nudge_text": "Bugs cluster at boundaries — test the edges, not the middle."
+  },
+  {
+    "domain": "deployment",
+    "difficulty": 1,
+    "prompt": "Your team manually SSHs into production servers to deploy. What's the biggest risk of this approach?",
+    "options": [
+      {
+        "key": "A",
+        "text": "No audit trail — you can't reliably track what changed and when"
+      },
+      {
+        "key": "B",
+        "text": "SSH keys might be compromised"
+      },
+      {
+        "key": "C",
+        "text": "Manual deploys are slower than CI/CD"
+      },
+      {
+        "key": "D",
+        "text": "Developers need direct server access"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 80,
+    "reveal_summary": "Manual SSH deploys have no reproducible audit trail — you can't answer 'what exactly was deployed at 3PM last Thursday?' during incidents.",
+    "reveal_detail": "Without automation, every deploy is a unique snowflake. Different engineers might run different steps, skip steps, or make ad-hoc changes. During an incident, you can't confidently determine the state of production. CI/CD pipelines provide: (1) an immutable deploy log, (2) reproducible builds, (3) consistent deploy steps, (4) easy rollback to a known state. Speed is a secondary benefit — reliability and auditability are the core value.",
+    "tags": [
+      "ci-cd",
+      "deployment-automation",
+      "auditability"
+    ],
+    "nudge_framework": "Reproducibility",
+    "nudge_text": "If you can't reproduce the deploy exactly, you can't debug or rollback reliably."
+  },
+  {
+    "domain": "tech-debt",
+    "difficulty": 1,
+    "prompt": "Your codebase has two different HTTP client libraries doing the same thing. What's the pragmatic approach?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Standardize on one and migrate all usages in a single PR"
+      },
+      {
+        "key": "B",
+        "text": "Standardize on one and migrate gradually when touching affected files"
+      },
+      {
+        "key": "C",
+        "text": "Keep both — they work fine and migration is wasted effort"
+      },
+      {
+        "key": "D",
+        "text": "Write a wrapper that abstracts over both libraries"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 85,
+    "reveal_summary": "Gradual migration when touching files naturally converges to one library without a risky big-bang migration PR.",
+    "reveal_detail": "A single giant migration PR is risky (lots of code changes, hard to review, easy to introduce bugs) and takes time away from feature work. Keeping both means double the mental overhead, inconsistent error handling, and duplicate dependency updates. The pragmatic path: decide which library to standardize on, add a linting rule to prevent new usages of the deprecated one, and migrate files as you naturally modify them. Within a few months, most code converges.",
+    "tags": [
+      "dependency-management",
+      "gradual-migration",
+      "pragmatism"
+    ],
+    "nudge_framework": "Boy Scout Rule",
+    "nudge_text": "Leave each file a little better than you found it."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 2,
+    "prompt": "Your Python script works locally but fails in CI with 'ModuleNotFoundError'. The module is listed in requirements.txt. What's the most likely cause?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The CI environment installs a different Python version without the module"
+      },
+      {
+        "key": "B",
+        "text": "requirements.txt has the wrong package name (PyPI name ≠ import name)"
+      },
+      {
+        "key": "C",
+        "text": "The CI server has no internet access to download packages"
+      },
+      {
+        "key": "D",
+        "text": "A cached virtualenv in CI has stale dependencies"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 75,
+    "reveal_summary": "The PyPI package name often differs from the import name (e.g., 'Pillow' installs as 'PIL', 'python-dateutil' imports as 'dateutil').",
+    "reveal_detail": "This is a common Python gotcha. Your requirements.txt might list the correct pip package, but if the CI installs it and the import name is different, Python can't find it. Classic examples: 'Pillow' → import PIL, 'python-dateutil' → import dateutil, 'beautifulsoup4' → import bs4. Locally it works because you installed it correctly at some point. Debug by running 'pip list' in CI and checking if the package is actually installed, then verify the import name matches.",
+    "tags": [
+      "python",
+      "ci-cd",
+      "dependency-management"
+    ],
+    "nudge_framework": "Environment Comparison",
+    "nudge_text": "When it works locally but not in CI, diff the two environments systematically."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 4,
+    "prompt": "Your event-driven system has events that must be processed in order per customer but can be parallel across customers. What's the best approach?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Use a single queue with one consumer to guarantee global ordering"
+      },
+      {
+        "key": "B",
+        "text": "Partition the queue by customer ID so each partition is ordered"
+      },
+      {
+        "key": "C",
+        "text": "Add sequence numbers and reorder in the consumer"
+      },
+      {
+        "key": "D",
+        "text": "Use a database with row-level locking per customer"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 92,
+    "reveal_summary": "Partitioning by customer ID gives per-customer ordering with cross-customer parallelism — exactly matching the requirement.",
+    "reveal_detail": "Kafka and similar systems natively support this pattern. Messages with the same partition key (customer ID) go to the same partition, which is consumed by one consumer in order. Different customers can be in different partitions consumed in parallel. A single queue bottlenecks throughput. Consumer-side reordering is complex and error-prone. Database locking reduces throughput. Kafka partitioning is purpose-built for this exact use case — ordered within a key, parallel across keys.",
+    "tags": [
+      "event-driven",
+      "kafka",
+      "partitioning",
+      "ordering"
+    ],
+    "nudge_framework": "Natural Partitioning",
+    "nudge_text": "Find the natural grouping key that aligns ordering requirements with parallelism."
+  },
+  {
+    "domain": "incident-response",
+    "difficulty": 1,
+    "prompt": "A deploy went out 20 minutes ago and error rates doubled. The deploy contained 8 merged PRs. What's the fastest way to restore service?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Rollback the entire deploy immediately"
+      },
+      {
+        "key": "B",
+        "text": "Read through the 8 PRs to identify the problematic change"
+      },
+      {
+        "key": "C",
+        "text": "Add more logging and wait for data"
+      },
+      {
+        "key": "D",
+        "text": "Scale up the service to handle the errors"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 90,
+    "reveal_summary": "Rollback first, investigate second. Restoring service is the priority — you can identify the root cause after users stop being affected.",
+    "reveal_detail": "The correlation between the deploy and the error spike is strong. Rollback restores service in minutes. Reading 8 PRs might take 30+ minutes during which users are impacted. Adding logging doesn't help currently-affected users. Scaling doesn't fix bugs. The rule: if you can safely rollback, do it immediately. Then investigate offline, identify the problematic PR, fix it, and redeploy. Time-to-recovery is the metric that matters during incidents.",
+    "tags": [
+      "rollback",
+      "incident-triage",
+      "time-to-recovery"
+    ],
+    "nudge_framework": "Reversible Actions First",
+    "nudge_text": "A rollback is fast and reversible. Investigation can happen after service is restored."
+  },
+  {
+    "domain": "performance",
+    "difficulty": 1,
+    "prompt": "Your web page loads a 500KB JavaScript bundle. The user sees a blank screen for 3 seconds. What's the most effective optimization?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Code-split the bundle and load non-critical JS lazily"
+      },
+      {
+        "key": "B",
+        "text": "Minify the JavaScript"
+      },
+      {
+        "key": "C",
+        "text": "Move the script tag to the bottom of the body"
+      },
+      {
+        "key": "D",
+        "text": "Add async attribute to the script tag"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Code-splitting reduces the initial bundle to only what's needed for the first render, dramatically cutting time-to-interactive.",
+    "reveal_detail": "500KB of JS is a lot — but most of it probably isn't needed for the initial page render. Code-splitting (via dynamic import(), React.lazy, or Next.js automatic splitting) loads only the critical code upfront and defers the rest. This could reduce the initial bundle from 500KB to 50-100KB. Minification typically saves 20-30% — helpful but not enough. Moving script tags or adding async helps with render-blocking but doesn't reduce parse/execute time of the full 500KB.",
+    "tags": [
+      "code-splitting",
+      "javascript",
+      "page-load"
+    ],
+    "nudge_framework": "Critical Path Analysis",
+    "nudge_text": "Only load what's needed for the user's first meaningful interaction."
+  },
+  {
+    "domain": "hiring",
+    "difficulty": 4,
+    "prompt": "Your team of 6 needs to hire 4 engineers in 3 months to meet a deadline. What's the biggest risk of this plan?",
+    "options": [
+      {
+        "key": "A",
+        "text": "New hires will slow down existing engineers during onboarding"
+      },
+      {
+        "key": "B",
+        "text": "Lowering the hiring bar to meet the headcount target"
+      },
+      {
+        "key": "C",
+        "text": "Not enough candidates in the pipeline"
+      },
+      {
+        "key": "D",
+        "text": "Budget constraints on competitive offers"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 78,
+    "reveal_summary": "Brooks's Law: adding people to a late project makes it later. 4 new hires will consume significant onboarding bandwidth from 6 existing engineers.",
+    "reveal_detail": "Each new engineer needs 1-3 months to become productive. During onboarding, existing engineers spend significant time on code reviews, mentoring, context sharing, and answering questions. With 4 new hires joining 6 engineers, you're asking 40% of the team to onboard simultaneously. The existing team's velocity drops substantially during this period — potentially making you miss the deadline you're trying to meet. Better: hire 2 now, 2 after the first pair is productive. Or extend the deadline.",
+    "tags": [
+      "team-scaling",
+      "brooks-law",
+      "onboarding"
+    ],
+    "nudge_framework": "Brooks's Law",
+    "nudge_text": "Adding people to a late project makes it later — onboarding has real costs."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 3,
+    "prompt": "A React component re-renders 50+ times when you type in an input field. Performance is sluggish. What's the most likely cause?",
+    "options": [
+      {
+        "key": "A",
+        "text": "State is stored too high in the component tree, causing cascading re-renders"
+      },
+      {
+        "key": "B",
+        "text": "The input is uncontrolled and React is fighting the DOM"
+      },
+      {
+        "key": "C",
+        "text": "A useEffect with the input value in its dependency array triggers side effects"
+      },
+      {
+        "key": "D",
+        "text": "The event handler creates a new function reference on every render"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 78,
+    "reveal_summary": "When input state lives high in the tree, every keystroke re-renders the entire subtree. Move state closer to where it's used.",
+    "reveal_detail": "If the input's onChange updates state at a parent or context level, every keystroke triggers re-rendering of all child components. With a deep tree, this means 50+ renders per keystroke. Solutions: (1) move the input state to the closest component that needs it, (2) use React.memo on expensive children, (3) debounce the state update if it syncs upward, (4) use useTransition for non-urgent updates. The React DevTools Profiler highlights which components re-render and why.",
+    "tags": [
+      "react",
+      "re-renders",
+      "state-management"
+    ],
+    "nudge_framework": "Locality of State",
+    "nudge_text": "State should live as close as possible to where it's used."
+  },
+  {
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Your API uses rate limiting based on IP address. A tester bypasses it by adding X-Forwarded-For headers. What's the fix?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Trust only the leftmost IP in X-Forwarded-For"
+      },
+      {
+        "key": "B",
+        "text": "Rate limit by authenticated user ID instead of IP"
+      },
+      {
+        "key": "C",
+        "text": "Configure the reverse proxy to set X-Forwarded-For and ignore client-provided values"
+      },
+      {
+        "key": "D",
+        "text": "Block requests with X-Forwarded-For headers entirely"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 85,
+    "reveal_summary": "The reverse proxy should overwrite X-Forwarded-For with the actual client IP, stripping any client-provided values.",
+    "reveal_detail": "Clients can spoof X-Forwarded-For headers trivially. The fix is architectural: your reverse proxy (nginx, CloudFlare, ALB) should be the trust boundary. Configure it to set X-Real-IP or X-Forwarded-For to the actual connecting IP, overwriting any client-provided values. Your application then trusts only this proxy-set header. Option A (leftmost IP) is actually the most spoofable position. Option B works for authenticated endpoints but not login/signup. Option D breaks legitimate proxy chains.",
+    "tags": [
+      "rate-limiting",
+      "ip-spoofing",
+      "reverse-proxy"
+    ],
+    "nudge_framework": "Trust Boundary",
+    "nudge_text": "Define where untrusted input ends and trusted infrastructure begins."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 1,
+    "prompt": "A junior developer asks: 'Should our small CRUD app (3 entities, 2 developers) use microservices?' What's your answer?",
+    "options": [
+      {
+        "key": "A",
+        "text": "No — a monolith is right for this scale. Microservices add unnecessary complexity."
+      },
+      {
+        "key": "B",
+        "text": "Yes — it's good practice to start with microservices for future scalability"
+      },
+      {
+        "key": "C",
+        "text": "Use microservices but keep them in a monorepo for simplicity"
+      },
+      {
+        "key": "D",
+        "text": "Start with serverless functions for each entity"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 93,
+    "reveal_summary": "A 3-entity CRUD app with 2 developers is the definition of monolith territory. Microservices add network, deployment, and debugging complexity with zero benefit at this scale.",
+    "reveal_detail": "Microservices solve organizational scaling problems (independent team deployment) and technical scaling problems (independent service scaling). With 2 developers and 3 entities, you have neither problem. A monolith gives you: simple deployments, easy debugging, no network latency between components, shared database transactions, and faster development. You can always extract services later if needed. The industry has overcorrected — most apps should be monoliths.",
+    "tags": [
+      "monolith",
+      "simplicity",
+      "premature-optimization"
+    ],
+    "nudge_framework": "YAGNI",
+    "nudge_text": "Don't solve scaling problems you don't have."
+  },
+  {
+    "domain": "testing",
+    "difficulty": 2,
+    "prompt": "Your React component test renders a form, fills in fields, and clicks submit. The test passes but doesn't catch a real bug where the submit button is disabled. What's missing?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The test clicks the button programmatically, bypassing the disabled state"
+      },
+      {
+        "key": "B",
+        "text": "The test needs a visual regression check"
+      },
+      {
+        "key": "C",
+        "text": "The test should use end-to-end testing instead of component testing"
+      },
+      {
+        "key": "D",
+        "text": "The test doesn't wait for form validation to complete"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Programmatic click (e.g., fireEvent.click) works on disabled buttons. Use userEvent.click which respects disabled state, matching real user behavior.",
+    "reveal_detail": "Testing Library's fireEvent.click dispatches the event directly, ignoring whether the button is disabled — it's a low-level DOM event trigger. Real users can't click disabled buttons. @testing-library/user-event's userEvent.click mimics actual user interaction and won't click disabled elements. This catches the bug. The lesson: test user behavior, not implementation details. userEvent is almost always preferable to fireEvent for this reason.",
+    "tags": [
+      "testing-library",
+      "user-event",
+      "accessibility"
+    ],
+    "nudge_framework": "Test Real Behavior",
+    "nudge_text": "Tests should simulate what users do, not what the DOM allows."
+  },
+  {
+    "domain": "deployment",
+    "difficulty": 3,
+    "prompt": "Your Docker image is 2.3GB and takes 8 minutes to build. What single change would most reduce the image size?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Use a multi-stage build with a minimal runtime base image"
+      },
+      {
+        "key": "B",
+        "text": "Add more entries to .dockerignore"
+      },
+      {
+        "key": "C",
+        "text": "Combine all RUN commands into a single layer"
+      },
+      {
+        "key": "D",
+        "text": "Switch from Ubuntu to Alpine as the base image"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "Multi-stage builds separate build-time dependencies (compilers, dev tools) from runtime, often reducing image size from GBs to MBs.",
+    "reveal_detail": "A 2.3GB image likely includes build tools (gcc, node_modules with devDependencies, SDKs). Multi-stage builds use a large build image for compilation, then copy only the output artifacts to a minimal runtime image (e.g., node:18-slim, distroless, or scratch). Example: a Go API goes from 1.5GB (with Go compiler) to 15MB (just the binary). Alpine helps but only saves ~100MB on the base image. .dockerignore prevents COPY bloat but doesn't remove build tools. Layer combining reduces layer count but not total size.",
+    "tags": [
+      "docker",
+      "image-optimization",
+      "multi-stage-builds"
+    ],
+    "nudge_framework": "Build vs Run Separation",
+    "nudge_text": "What you need to build the app is different from what you need to run it."
+  },
+  {
+    "domain": "tech-debt",
+    "difficulty": 2,
+    "prompt": "Your team copies environment-specific config (API URLs, feature flags) into 5 different files. When a URL changes, someone always forgets one. What's the fix?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Use a single config source that generates environment-specific files"
+      },
+      {
+        "key": "B",
+        "text": "Add a checklist to the PR template for config changes"
+      },
+      {
+        "key": "C",
+        "text": "Write a script that validates all config files match"
+      },
+      {
+        "key": "D",
+        "text": "Move all config to environment variables"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 82,
+    "reveal_summary": "A single source of truth for config (with environment overrides) eliminates the 'forgot to update one file' class of bugs entirely.",
+    "reveal_detail": "Duplicated config is a process problem, not a people problem. Checklists get skipped. Validation scripts catch the error after it's made. A single config source (e.g., a base config with environment overlays, or a config management tool) means one change propagates everywhere. Pattern: config/base.json contains shared values, config/production.json overrides only what differs. Build step merges them. This eliminates an entire category of bugs.",
+    "tags": [
+      "configuration-management",
+      "dry-principle",
+      "single-source-of-truth"
+    ],
+    "nudge_framework": "Eliminate, Don't Mitigate",
+    "nudge_text": "Don't add process to prevent errors — remove the possibility of errors."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 1,
+    "prompt": "Your API returns a 403 error. The user is authenticated and the endpoint exists. What should you check first?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Authorization/permissions — does this user have access to this resource?"
+      },
+      {
+        "key": "B",
+        "text": "CORS configuration — is the origin allowed?"
+      },
+      {
+        "key": "C",
+        "text": "The auth token has expired"
+      },
+      {
+        "key": "D",
+        "text": "The API rate limit has been hit"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 90,
+    "reveal_summary": "403 means Forbidden — the server knows who you are (authenticated) but you don't have permission (not authorized). Check role/permission assignments.",
+    "reveal_detail": "HTTP 403 specifically means 'I know who you are, but you're not allowed to do this.' It's an authorization error, not an authentication error (which would be 401). Check: user roles, resource ownership, permission policies (RBAC/ABAC), and any middleware that checks permissions. CORS issues typically show as browser errors, not 403s. Expired tokens return 401. Rate limits return 429. Understanding HTTP status code semantics speeds up debugging significantly.",
+    "tags": [
+      "http-status-codes",
+      "authorization",
+      "debugging-basics"
+    ],
+    "nudge_framework": "Read the Error",
+    "nudge_text": "HTTP status codes tell you exactly what went wrong — 403 means forbidden, not unauthenticated."
+  },
+  {
+    "domain": "code-review",
+    "difficulty": 1,
+    "prompt": "A PR adds a TODO comment: '// TODO: handle edge case later'. There's no tracking ticket. What's the problem with this approach?",
+    "options": [
+      {
+        "key": "A",
+        "text": "TODOs without tickets become permanent — they're never addressed"
+      },
+      {
+        "key": "B",
+        "text": "TODO comments slow down the code parser"
+      },
+      {
+        "key": "C",
+        "text": "The edge case should be handled now, not later"
+      },
+      {
+        "key": "D",
+        "text": "Comments should never reference future work"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "Untracked TODOs are effectively dead code comments — without a ticket, no one will prioritize or remember to address them.",
+    "reveal_detail": "Studies of codebases show that most TODO comments are never resolved. They become background noise. The fix: either handle it now (if it's important enough to comment on, it might be important enough to do), or create a tracked issue/ticket and reference it: '// TODO(JIRA-123): handle empty array edge case'. This way the work is visible in the backlog and can be prioritized. Request the PR author either fix it now or create a ticket.",
+    "tags": [
+      "code-comments",
+      "technical-debt-tracking",
+      "code-quality"
+    ],
+    "nudge_framework": "Make It Visible",
+    "nudge_text": "If work is worth noting, it's worth tracking in a system where it can be prioritized."
+  },
+  {
+    "domain": "incident-response",
+    "difficulty": 2,
+    "prompt": "Your alerting system fires 200+ alerts per day. The on-call engineer admits they've started ignoring most alerts. What's the root cause?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Alert fatigue — too many low-signal alerts desensitize responders"
+      },
+      {
+        "key": "B",
+        "text": "The engineer needs better on-call training"
+      },
+      {
+        "key": "C",
+        "text": "Alert thresholds are set correctly but the system is too unstable"
+      },
+      {
+        "key": "D",
+        "text": "Alerts should be routed to the whole team, not one person"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 90,
+    "reveal_summary": "200 alerts/day means most are noise. Alert fatigue causes responders to ignore all alerts, including critical ones — this is a systemic failure.",
+    "reveal_detail": "Alert fatigue is well-documented in healthcare, aviation, and engineering. When >90% of alerts are non-actionable, humans learn to ignore them. The fix: (1) audit every alert — delete alerts no one acts on, (2) set thresholds based on user impact, not arbitrary metrics, (3) every alert must have a clear runbook action, (4) target <5 actionable alerts per on-call shift. The problem isn't the engineer — it's the system crying wolf 200 times a day.",
+    "tags": [
+      "alerting",
+      "on-call",
+      "signal-to-noise"
+    ],
+    "nudge_framework": "Signal-to-Noise Ratio",
+    "nudge_text": "An alert that nobody acts on is worse than no alert — it teaches people to ignore."
+  },
+  {
+    "domain": "performance",
+    "difficulty": 4,
+    "prompt": "Your TypeScript API processes CSV uploads. A 100MB CSV causes the Node.js process to OOM. You're currently reading the entire file into memory with fs.readFileSync. What's the fix?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Increase Node.js memory limit with --max-old-space-size"
+      },
+      {
+        "key": "B",
+        "text": "Use a streaming CSV parser that processes row by row"
+      },
+      {
+        "key": "C",
+        "text": "Split the file into chunks on the client side before uploading"
+      },
+      {
+        "key": "D",
+        "text": "Switch to a worker thread for the processing"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 90,
+    "reveal_summary": "Streaming parsers (like csv-parser or Papa Parse) process one row at a time, using constant memory regardless of file size.",
+    "reveal_detail": "readFileSync loads the entire 100MB into memory at once. The parsed JavaScript objects can be 3-5x larger than the raw CSV, so you're looking at 300-500MB of memory usage. A streaming parser reads chunks from a readable stream, emits one row at a time, and lets you process (insert to DB, transform) without holding the full dataset in memory. Memory usage stays flat at ~50MB regardless of file size. Increasing --max-old-space-size just delays the problem to larger files.",
+    "tags": [
+      "node.js",
+      "streaming",
+      "memory-management"
+    ],
+    "nudge_framework": "Resource Bounds",
+    "nudge_text": "If memory usage grows with input size, you need streaming. If it's constant, you're fine."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 2,
+    "prompt": "Your app needs to send email notifications. You currently send emails synchronously in the request handler. Users complain about slow response times. What's the best improvement?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Move email sending to a background job queue"
+      },
+      {
+        "key": "B",
+        "text": "Use a faster email provider"
+      },
+      {
+        "key": "C",
+        "text": "Send emails in a fire-and-forget async call"
+      },
+      {
+        "key": "D",
+        "text": "Batch emails and send them every 5 minutes via cron"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "A job queue (Redis/Bull, SQS, etc.) decouples email sending from the request. The API responds immediately while emails send in the background with retry logic.",
+    "reveal_detail": "Synchronous email sending blocks the API response for 500ms-2s while communicating with the email provider. A background job queue: (1) returns immediately to the user, (2) retries on failure, (3) provides visibility into email delivery status, (4) can rate-limit to avoid provider throttling. Fire-and-forget (option C) is risky because failed emails are silently lost. A cron job adds latency. A faster provider helps but doesn't fix the architectural problem.",
+    "tags": [
+      "async-processing",
+      "job-queues",
+      "user-experience"
+    ],
+    "nudge_framework": "Request-Response Separation",
+    "nudge_text": "If the user doesn't need to wait for it, don't make them wait for it."
+  },
+  {
+    "domain": "security",
+    "difficulty": 3,
+    "prompt": "Your frontend stores a JWT in localStorage. A security engineer flags this as a vulnerability. What's their concern?",
+    "options": [
+      {
+        "key": "A",
+        "text": "XSS attacks can read localStorage and steal the token"
+      },
+      {
+        "key": "B",
+        "text": "localStorage is not encrypted on disk"
+      },
+      {
+        "key": "C",
+        "text": "The JWT can be modified by the user"
+      },
+      {
+        "key": "D",
+        "text": "localStorage has a 5MB size limit that could cause failures"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 92,
+    "reveal_summary": "Any XSS vulnerability in your app can execute document.cookie or localStorage.getItem('token') and exfiltrate the JWT to an attacker's server.",
+    "reveal_detail": "localStorage is accessible to any JavaScript running on your origin. If an attacker exploits an XSS vulnerability (e.g., via unsanitized user input, a compromised npm package, or a script injection), they can read the JWT and send it to their server. The alternative: store the JWT in an httpOnly cookie, which JavaScript cannot access. This doesn't prevent CSRF (use SameSite=Strict + CSRF tokens), but it does prevent token theft via XSS. Defense in depth: use both httpOnly cookies and CSP headers.",
+    "tags": [
+      "xss",
+      "jwt",
+      "localstorage",
+      "cookie-security"
+    ],
+    "nudge_framework": "Attacker's Perspective",
+    "nudge_text": "If I can run JS on your page, what can I steal?"
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 5,
+    "prompt": "Your distributed tracing shows a 99th percentile latency of 30s on an endpoint that averages 200ms. The slow traces have normal spans. What's likely causing the long tail?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Garbage collection pauses causing stop-the-world events"
+      },
+      {
+        "key": "B",
+        "text": "A mutex contention bottleneck serializing requests"
+      },
+      {
+        "key": "C",
+        "text": "DNS resolution timeouts on the first request to a new host"
+      },
+      {
+        "key": "D",
+        "text": "Connection pool exhaustion causing requests to queue"
+      }
+    ],
+    "correct_option": "D",
+    "answer_defensibility": 75,
+    "reveal_summary": "When the connection pool is exhausted, new requests wait in a queue until a connection is returned — adding seconds of queue time that doesn't appear as a span.",
+    "reveal_detail": "Connection pool exhaustion is a common cause of long-tail latency. When all connections are in use, incoming requests wait. This queue time often doesn't show up in tracing spans because the wait happens before the database/HTTP span starts. GC pauses would show as gaps in spans. DNS timeouts would show in connection spans. Mutex contention usually shows consistent slowdown, not just p99. Check pool metrics: active connections, wait count, wait time.",
+    "tags": [
+      "latency",
+      "connection-pools",
+      "p99",
+      "distributed-tracing"
+    ],
+    "nudge_framework": "Queue Theory",
+    "nudge_text": "When average is fine but p99 is bad, look for queuing behavior."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 5,
+    "prompt": "You're designing a collaborative document editor. Two users edit the same paragraph simultaneously. What's the best consistency model?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Operational Transformation (OT) with a central server"
+      },
+      {
+        "key": "B",
+        "text": "Last-writer-wins with conflict detection"
+      },
+      {
+        "key": "C",
+        "text": "CRDTs (Conflict-free Replicated Data Types)"
+      },
+      {
+        "key": "D",
+        "text": "Pessimistic locking — lock the paragraph while someone edits"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 72,
+    "reveal_summary": "CRDTs allow concurrent edits that automatically merge without conflicts, enabling real-time collaboration without a central server bottleneck.",
+    "reveal_detail": "CRDTs guarantee that concurrent edits by multiple users will converge to the same state regardless of the order operations are applied. Unlike OT (used by Google Docs historically), CRDTs don't require a central server to resolve conflicts — they're mathematically guaranteed to converge. This enables better offline support and P2P collaboration. Libraries like Yjs and Automerge implement text CRDTs. OT is also valid but more complex to implement correctly. Locking destroys the real-time collaborative experience.",
+    "tags": [
+      "crdt",
+      "collaboration",
+      "real-time",
+      "consistency"
+    ],
+    "nudge_framework": "Eventual Consistency",
+    "nudge_text": "Choose a model where all replicas converge — even without coordination."
+  },
+  {
+    "domain": "incident-response",
+    "difficulty": 4,
+    "prompt": "During a P1, the incident commander asks everyone to 'try things' to fix the issue. Three engineers make simultaneous changes. The issue resolves but no one knows which change fixed it. What went wrong?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Lack of coordinated troubleshooting — changes should be serialized and documented"
+      },
+      {
+        "key": "B",
+        "text": "Too many people in the incident channel"
+      },
+      {
+        "key": "C",
+        "text": "The incident commander should have delegated to one person"
+      },
+      {
+        "key": "D",
+        "text": "They should have used feature flags to isolate changes"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "Parallel uncoordinated changes make root cause analysis impossible. Each change should be announced, documented, and given time to show effect before the next.",
+    "reveal_detail": "This anti-pattern is called 'shotgun debugging' in incident response. When multiple changes happen simultaneously, you can't determine causality. The unfixed root cause may resurface. Best practice: the IC assigns specific investigation tasks, each person announces their intended change before making it, changes are applied one at a time with observation periods. This is slower per-change but leads to reliable resolution and clear postmortem findings.",
+    "tags": [
+      "incident-management",
+      "coordination",
+      "root-cause-analysis"
+    ],
+    "nudge_framework": "Scientific Method",
+    "nudge_text": "Change one variable at a time and observe the result."
+  },
+  {
+    "domain": "code-review",
+    "difficulty": 3,
+    "prompt": "A PR adds a new database table with no indexes beyond the primary key. The table will be queried by user_id, created_at, and status in production. What's your feedback?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Add indexes on user_id, created_at, and status before merging"
+      },
+      {
+        "key": "B",
+        "text": "Add a composite index on (user_id, created_at, status)"
+      },
+      {
+        "key": "C",
+        "text": "Wait until queries are slow, then add indexes based on actual query patterns"
+      },
+      {
+        "key": "D",
+        "text": "Add indexes on user_id and a composite on (status, created_at)"
+      }
+    ],
+    "correct_option": "D",
+    "answer_defensibility": 70,
+    "reveal_summary": "Index the high-cardinality foreign key (user_id) and create a composite for the common filter+sort pattern (status, created_at). Don't over-index.",
+    "reveal_detail": "user_id is a high-cardinality foreign key used in JOINs — it needs its own index. Queries like 'WHERE status = X ORDER BY created_at DESC' benefit from a composite (status, created_at) index. A single composite on all three columns only helps if all three are always used together in that order. Individual indexes on each column would be redundant since the composite covers status and created_at. Waiting for problems (option C) is risky for a production table — adding indexes to large tables can lock the table.",
+    "tags": [
+      "database-indexing",
+      "query-performance",
+      "postgres"
+    ],
+    "nudge_framework": "Query Pattern Analysis",
+    "nudge_text": "Design indexes around your actual query patterns, not the table structure."
+  },
+  {
+    "domain": "performance",
+    "difficulty": 5,
+    "prompt": "Your Kubernetes pods show 200ms CPU throttling per second despite using only 40% of their CPU limit. What's happening?",
+    "options": [
+      {
+        "key": "A",
+        "text": "CFS bandwidth control is throttling bursts within the 100ms scheduling period"
+      },
+      {
+        "key": "B",
+        "text": "The node is overcommitted and other pods are stealing CPU"
+      },
+      {
+        "key": "C",
+        "text": "The CPU limit is set too low for the workload"
+      },
+      {
+        "key": "D",
+        "text": "Vertical pod autoscaler is interfering with resource allocation"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 82,
+    "reveal_summary": "Linux CFS throttles in 100ms periods. A multi-threaded app can exhaust its quota in a burst within one period, causing throttling despite low average usage.",
+    "reveal_detail": "Kubernetes CPU limits use Linux CFS bandwidth control with 100ms periods. If your app has 4 threads and a 1-core limit (100ms quota per period), all 4 threads running simultaneously exhaust the 100ms quota in 25ms, then all threads are throttled for 75ms. Average utilization shows 40%, but the app experiences severe latency spikes. Solutions: increase CPU limits, use cpu.cfs_burst_us (kernel 5.14+), reduce thread concurrency, or remove CPU limits entirely (use requests only for scheduling).",
+    "tags": [
+      "kubernetes",
+      "cpu-throttling",
+      "cfs",
+      "linux"
+    ],
+    "nudge_framework": "Averages Lie",
+    "nudge_text": "Average CPU usage hides burst patterns — look at throttling metrics, not utilization."
+  },
+  {
+    "domain": "security",
+    "difficulty": 5,
+    "prompt": "Your CI/CD pipeline has a step that runs `npm install` from package.json. An attacker submits a PR that modifies a dependency version. What's the risk?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Dependency confusion — installing a malicious package from a public registry instead of private"
+      },
+      {
+        "key": "B",
+        "text": "The postinstall script of a malicious package executes arbitrary code in CI"
+      },
+      {
+        "key": "C",
+        "text": "The dependency has a known CVE vulnerability"
+      },
+      {
+        "key": "D",
+        "text": "The modified dependency could have a larger bundle size"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 85,
+    "reveal_summary": "npm packages can have postinstall scripts that execute arbitrary code. In CI, this means an attacker can run code with CI pipeline permissions.",
+    "reveal_detail": "npm's postinstall scripts run automatically during `npm install`. In a CI environment, these scripts have access to: CI secrets, deployment credentials, source code, and network access to internal systems. An attacker who gets a malicious dependency version merged can exfiltrate secrets, inject backdoors, or pivot to production. Mitigations: use --ignore-scripts, audit PR dependency changes carefully, pin exact versions, use lockfile-lint, and isolate CI environments with minimal permissions.",
+    "tags": [
+      "supply-chain-security",
+      "npm",
+      "ci-cd-security"
+    ],
+    "nudge_framework": "Blast Radius",
+    "nudge_text": "What permissions does your CI pipeline have, and what could a malicious script do with them?"
+  },
+  {
+    "domain": "testing",
+    "difficulty": 3,
+    "prompt": "Your test mocks a function that returns a user object. The real function was updated to include a new 'role' field, but the mock wasn't updated. Tests pass but production breaks. What's the lesson?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Mocks that diverge from real implementations are a testing anti-pattern — use contract tests"
+      },
+      {
+        "key": "B",
+        "text": "Never mock anything — always use real implementations"
+      },
+      {
+        "key": "C",
+        "text": "Mocks should be auto-generated from the real implementation"
+      },
+      {
+        "key": "D",
+        "text": "Add integration tests that don't use mocks"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 80,
+    "reveal_summary": "When mocks drift from reality, tests give false confidence. Contract tests ensure mocks and real implementations stay in sync.",
+    "reveal_detail": "This is the 'mock drift' problem. Your mock returns {name, email} while the real function now returns {name, email, role}. Tests pass against the mock but fail against reality. Contract tests solve this: define the expected interface (contract) and verify both the mock AND the real implementation conform to it. If the real implementation adds a field, the contract test catches the mock's divergence. Libraries: Pact for API contracts, TypeScript interfaces for in-process contracts.",
+    "tags": [
+      "mocking",
+      "contract-testing",
+      "test-reliability"
+    ],
+    "nudge_framework": "Test Faithfulness",
+    "nudge_text": "A test is only as valuable as the accuracy of its test doubles."
+  },
+  {
+    "domain": "deployment",
+    "difficulty": 5,
+    "prompt": "You need to migrate a primary PostgreSQL database from one cloud provider to another with less than 5 minutes of downtime. The database is 500GB. What approach works?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Logical replication to the target, then cutover by switching the connection string"
+      },
+      {
+        "key": "B",
+        "text": "pg_dump on the source, transfer, pg_restore on the target"
+      },
+      {
+        "key": "C",
+        "text": "Block writes, rsync the data directory, start the new instance"
+      },
+      {
+        "key": "D",
+        "text": "Use a database proxy that can hot-switch between backends"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Logical replication keeps the target in sync continuously. The cutover is just redirecting the connection string — seconds of downtime, not hours.",
+    "reveal_detail": "Logical replication streams WAL changes from source to target in real-time. The migration process: (1) set up logical replication to sync the target, (2) wait for the replica lag to reach near-zero, (3) stop writes to the source (brief downtime starts), (4) verify the target has caught up, (5) switch the application connection string to the target (downtime ends). Total downtime: 1-5 minutes. pg_dump of 500GB would take hours. rsync requires extended downtime. A database proxy adds complexity but could reduce downtime further.",
+    "tags": [
+      "database-migration",
+      "logical-replication",
+      "zero-downtime"
+    ],
+    "nudge_framework": "Parallel Preparation",
+    "nudge_text": "Do as much work as possible while the old system is still running."
+  },
+  {
+    "domain": "tech-debt",
+    "difficulty": 3,
+    "prompt": "Your team has 3 different state management solutions in a React app: Redux in older pages, Context API in newer ones, and Zustand in the newest feature. What should you do?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Standardize on one and migrate everything in a dedicated sprint"
+      },
+      {
+        "key": "B",
+        "text": "Accept the diversity — different patterns for different needs"
+      },
+      {
+        "key": "C",
+        "text": "Standardize on one and migrate as you touch each module"
+      },
+      {
+        "key": "D",
+        "text": "Abstract all three behind a unified hook interface"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 80,
+    "reveal_summary": "Pick one winner, forbid new usage of the others, and migrate organically as you modify each module.",
+    "reveal_detail": "Three state management patterns means three mental models, three sets of debugging tools, and three patterns for new hires to learn. But a big-bang migration is risky and expensive. The pragmatic path: (1) decide which solution best fits your app (likely Zustand for its simplicity), (2) add a lint rule preventing new Redux/Context state stores, (3) migrate modules as you naturally modify them, (4) document the standard in your contributing guide. Over 3-6 months, most actively-developed modules converge.",
+    "tags": [
+      "state-management",
+      "react",
+      "standardization"
+    ],
+    "nudge_framework": "Pave the Right Path",
+    "nudge_text": "Make the right choice the easiest choice — lint rules and templates guide new code."
+  },
+  {
+    "domain": "hiring",
+    "difficulty": 3,
+    "prompt": "A candidate's take-home project works perfectly but the code has no error handling, no tests, and variable names like 'x' and 'temp'. What does this signal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "They can solve problems but lack production engineering habits"
+      },
+      {
+        "key": "B",
+        "text": "They're a strong hacker-type who prioritizes shipping"
+      },
+      {
+        "key": "C",
+        "text": "The take-home was too easy — they rushed through it"
+      },
+      {
+        "key": "D",
+        "text": "Nothing — take-homes are artificial and don't reflect real work"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 78,
+    "reveal_summary": "Working code without quality practices suggests the candidate can solve the core problem but may produce hard-to-maintain code in production.",
+    "reveal_detail": "A take-home is a chance to show your best work at your own pace — unlike a whiteboard interview, there's no time pressure excuse for poor variable names and zero error handling. This signals the candidate's default quality bar. In production, their code would work initially but create maintenance burden: bugs are hard to trace without error handling, intent is unclear without good naming, and changes are risky without tests. Discuss in the interview — some candidates improve dramatically with feedback and mentorship.",
+    "tags": [
+      "code-quality",
+      "candidate-evaluation",
+      "take-home-projects"
+    ],
+    "nudge_framework": "Default Behavior",
+    "nudge_text": "How someone codes when no one's watching reveals their internalized standards."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 2,
+    "prompt": "Your Docker container works locally but crashes in production with 'exec format error'. What's the cause?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The image was built on an ARM Mac but production runs x86/AMD64"
+      },
+      {
+        "key": "B",
+        "text": "The Dockerfile has a syntax error"
+      },
+      {
+        "key": "C",
+        "text": "The base image is corrupted in the registry"
+      },
+      {
+        "key": "D",
+        "text": "The container doesn't have execute permissions on the binary"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 90,
+    "reveal_summary": "Apple Silicon Macs build ARM images by default. Running an ARM image on an x86 server produces 'exec format error'.",
+    "reveal_detail": "M1/M2/M3 Macs use ARM architecture. Docker builds target the host architecture by default. If you build on an ARM Mac and push to a registry, deploying on x86 servers fails with 'exec format error' because the binary format is incompatible. Fix: build with --platform linux/amd64 or use docker buildx to create multi-platform images. This is one of the most common Docker gotchas since Apple Silicon adoption.",
+    "tags": [
+      "docker",
+      "arm",
+      "cross-platform",
+      "apple-silicon"
+    ],
+    "nudge_framework": "Environment Parity",
+    "nudge_text": "Match your build architecture to your deployment architecture."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 3,
+    "prompt": "Your API gateway adds 15ms latency to every request. The team suggests removing it and having clients call services directly. What's the trade-off they're missing?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The gateway provides centralized auth, rate limiting, and routing — replacing it means duplicating this logic in every service"
+      },
+      {
+        "key": "B",
+        "text": "The gateway provides SSL termination which is expensive to distribute"
+      },
+      {
+        "key": "C",
+        "text": "The 15ms latency is negligible and not worth optimizing"
+      },
+      {
+        "key": "D",
+        "text": "Removing the gateway exposes internal service topology to clients"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 82,
+    "reveal_summary": "API gateways centralize cross-cutting concerns. Without it, every service must independently implement auth, rate limiting, CORS, logging, and routing.",
+    "reveal_detail": "The 15ms cost buys you: single point for auth token validation, unified rate limiting, request/response logging, CORS handling, API versioning, and circuit breaking. Without the gateway, each service must implement these independently — leading to inconsistent behavior, duplicated code, and security gaps (one service forgets auth validation). If 15ms matters, optimize the gateway (caching, connection reuse) rather than removing it. The operational simplification is worth far more than 15ms.",
+    "tags": [
+      "api-gateway",
+      "cross-cutting-concerns",
+      "architecture-trade-offs"
+    ],
+    "nudge_framework": "Total Cost of Ownership",
+    "nudge_text": "15ms of latency vs. maintaining auth logic in 15 services — which costs more?"
+  },
+  {
+    "domain": "code-review",
+    "difficulty": 2,
+    "prompt": "A PR modifies 47 files and is 2,800 lines of changes. How should you approach the review?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Ask the author to break it into smaller, reviewable PRs"
+      },
+      {
+        "key": "B",
+        "text": "Review it thoroughly — large PRs happen sometimes"
+      },
+      {
+        "key": "C",
+        "text": "Skim the PR and approve — blocking it hurts velocity"
+      },
+      {
+        "key": "D",
+        "text": "Review only the most critical files (API changes, security)"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "PRs over ~400 lines have sharply declining review quality. Break it up — each PR should be independently reviewable and deployable.",
+    "reveal_detail": "Research from SmartBear and Google shows that review effectiveness drops significantly above 200-400 lines. Reviewers spend less time per line, miss more bugs, and rubber-stamp large PRs. Ask the author: 'Can this be split into X, Y, Z?' — usually a large PR contains logical chunks (refactoring + feature + tests) that can be separate PRs. If truly inseparable (rare), request a walkthrough meeting first. Never skim-approve — that's worse than no review.",
+    "tags": [
+      "code-review",
+      "pr-size",
+      "review-quality"
+    ],
+    "nudge_framework": "Cognitive Load",
+    "nudge_text": "Humans can effectively review ~200-400 lines. Beyond that, quality drops sharply."
+  },
+  {
+    "domain": "performance",
+    "difficulty": 2,
+    "prompt": "Your web app makes 40 HTTP requests on page load — 30 of them are small API calls returning JSON under 1KB. What's the primary bottleneck?",
+    "options": [
+      {
+        "key": "A",
+        "text": "HTTP connection overhead — each request has round-trip latency regardless of payload size"
+      },
+      {
+        "key": "B",
+        "text": "Browser's maximum concurrent connection limit per domain"
+      },
+      {
+        "key": "C",
+        "text": "Server processing time for 40 concurrent requests"
+      },
+      {
+        "key": "D",
+        "text": "Total bandwidth consumed by 40 requests"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 80,
+    "reveal_summary": "Each HTTP request has fixed overhead (DNS, TCP, TLS, round-trip). 40 tiny requests waste time on overhead, not payload. Batch them.",
+    "reveal_detail": "A 1KB JSON response might take 50ms to receive — but 45ms of that is connection overhead (DNS lookup, TCP handshake, TLS negotiation, server processing, round-trip latency), not the 1KB transfer. Multiply by 40 and you're wasting seconds on overhead. Solutions: batch API calls into fewer requests, use GraphQL for query batching, implement a BFF (Backend for Frontend) that aggregates calls, or use HTTP/2 multiplexing. The browser connection limit (option B) is secondary — HTTP/2 handles this.",
+    "tags": [
+      "http-overhead",
+      "request-batching",
+      "page-load"
+    ],
+    "nudge_framework": "Fixed vs Variable Cost",
+    "nudge_text": "When payloads are tiny, the fixed overhead per request dominates total time."
+  },
+  {
+    "domain": "security",
+    "difficulty": 4,
+    "prompt": "Your app generates PDF reports with user-provided data embedded in them. The PDFs are generated server-side using an HTML-to-PDF library. What's the primary security risk?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Server-Side XSS — user input rendered as HTML can execute on the server"
+      },
+      {
+        "key": "B",
+        "text": "The PDF might contain malware"
+      },
+      {
+        "key": "C",
+        "text": "User data in the PDF might violate GDPR"
+      },
+      {
+        "key": "D",
+        "text": "Large user inputs could cause the PDF generation to OOM"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "HTML-to-PDF libraries (like Puppeteer, wkhtmltopdf) render HTML in a browser context. Unsanitized user input can access local files via file:// or make server-side requests.",
+    "reveal_detail": "When you inject user input into an HTML template that's rendered by a headless browser, you create a server-side XSS vulnerability. An attacker can inject: <script>fetch('file:///etc/passwd')</script> or <img src='http://internal-service/admin'> to access the server's filesystem or internal network. The headless browser has the server's network access and file permissions. Mitigations: sanitize all user input, use a sandboxed rendering environment, disable file:// protocol, restrict network access from the renderer.",
+    "tags": [
+      "server-side-xss",
+      "pdf-generation",
+      "html-injection"
+    ],
+    "nudge_framework": "Execution Context",
+    "nudge_text": "Where does this code execute? The server's browser context has the server's access."
+  },
+  {
+    "domain": "testing",
+    "difficulty": 4,
+    "prompt": "Your e2e test suite using Cypress is flaky — tests intermittently fail waiting for elements that load asynchronously. Adding cy.wait(5000) fixes them. Is this the right approach?",
+    "options": [
+      {
+        "key": "A",
+        "text": "No — use cy.get with built-in retry/timeout instead of fixed waits"
+      },
+      {
+        "key": "B",
+        "text": "Yes — fixed waits are the most reliable approach for async content"
+      },
+      {
+        "key": "C",
+        "text": "No — mock the async calls to make them synchronous"
+      },
+      {
+        "key": "D",
+        "text": "No — use cy.clock to control time in tests"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 92,
+    "reveal_summary": "Fixed waits (cy.wait(5000)) are slow and still flaky. Cypress commands like cy.get() automatically retry until the element appears or the timeout expires.",
+    "reveal_detail": "cy.wait(5000) always waits 5 seconds even if the element appears in 200ms — making tests slow. And if the element takes 6 seconds (e.g., slow CI), it still fails. Cypress's built-in retry mechanism in cy.get(), cy.contains(), and assertions automatically retries until the condition is met or a configurable timeout expires. This is both faster and more reliable. Use cy.intercept() to wait for specific API calls to complete. Fixed waits are the #1 cause of flaky Cypress tests.",
+    "tags": [
+      "cypress",
+      "e2e-testing",
+      "flaky-tests",
+      "async"
+    ],
+    "nudge_framework": "Event-Driven Waiting",
+    "nudge_text": "Wait for the thing to happen, not for a fixed amount of time."
+  },
+  {
+    "domain": "deployment",
+    "difficulty": 2,
+    "prompt": "Your team runs database migrations as part of the deployment pipeline. A migration fails mid-deployment. What's the safest recovery?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Run the down migration to rollback, then fix and redeploy"
+      },
+      {
+        "key": "B",
+        "text": "Manually fix the database to match the expected state"
+      },
+      {
+        "key": "C",
+        "text": "Delete the database and restore from backup"
+      },
+      {
+        "key": "D",
+        "text": "Skip the failed migration and continue deploying"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 80,
+    "reveal_summary": "A properly written down migration reverses the failed up migration, restoring the database to its pre-migration state safely.",
+    "reveal_detail": "Every migration should have a corresponding down/rollback migration. When an up migration fails: (1) check if it partially applied (some migration tools are transactional, some aren't), (2) run the down migration to cleanly reverse changes, (3) fix the migration code, (4) redeploy. Manual database fixes are error-prone and not reproducible. Restoring from backup loses recent data. Skipping migrations creates schema drift. Key: always write and test down migrations.",
+    "tags": [
+      "database-migrations",
+      "rollback",
+      "deployment-safety"
+    ],
+    "nudge_framework": "Undo Design",
+    "nudge_text": "Every change should have a tested rollback path before it's applied."
+  },
+  {
+    "domain": "tech-debt",
+    "difficulty": 4,
+    "prompt": "Your API has 15 endpoints, each duplicating similar auth, validation, and error handling code. The duplication grew organically. What's the best refactoring approach?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Extract middleware for auth, validation, and error handling"
+      },
+      {
+        "key": "B",
+        "text": "Create a base controller class that all endpoints extend"
+      },
+      {
+        "key": "C",
+        "text": "Generate endpoints from an OpenAPI spec"
+      },
+      {
+        "key": "D",
+        "text": "Leave it — duplication is easier to understand than abstraction"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Middleware separates cross-cutting concerns (auth, validation, errors) from business logic. Each endpoint becomes just its unique logic.",
+    "reveal_detail": "Middleware is the standard pattern for removing cross-cutting concern duplication in HTTP APIs. Instead of each endpoint handling auth → validate → try/catch → respond, middleware chains handle auth and validation before the endpoint runs, and error middleware catches exceptions after. This reduces each endpoint to just its business logic. Base classes (option B) create tight coupling and inheritance complexity. OpenAPI generation (C) is overkill for 15 endpoints. The duplication here IS a problem — one endpoint's auth logic diverging creates a security hole.",
+    "tags": [
+      "middleware",
+      "code-duplication",
+      "api-design"
+    ],
+    "nudge_framework": "Separation of Concerns",
+    "nudge_text": "Auth, validation, and error handling aren't endpoint logic — they're infrastructure."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 3,
+    "prompt": "Your React app shows stale data after a mutation. The mutation succeeds (server confirms), but the UI shows the old value until a page refresh. What's the most likely cause?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The mutation doesn't invalidate or update the local cache/query"
+      },
+      {
+        "key": "B",
+        "text": "React's state batching delays the update"
+      },
+      {
+        "key": "C",
+        "text": "The component isn't subscribed to the data store"
+      },
+      {
+        "key": "D",
+        "text": "A service worker is caching the old API response"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "If using React Query, SWR, or Apollo, mutations must invalidate or update the cached query data — otherwise the UI continues showing the stale cached version.",
+    "reveal_detail": "Modern React data-fetching libraries cache query results. When you mutate data server-side, the local cache doesn't know about the change unless you explicitly: (1) invalidate the related queries (queryClient.invalidateQueries), (2) optimistically update the cache, or (3) refetch the query. Without this, the UI renders from the stale cache until it's naturally refetched (on window focus, for example). This is the most common React Query/SWR mistake — the mutation works but the UI doesn't reflect it.",
+    "tags": [
+      "react-query",
+      "caching",
+      "data-fetching",
+      "mutations"
+    ],
+    "nudge_framework": "Cache Coherence",
+    "nudge_text": "Every write must invalidate or update every cache that holds the affected data."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 4,
+    "prompt": "Your notification service sends push, email, and SMS. Currently it's one service handling all three. Product wants to add Slack and webhook notifications. How should you evolve the architecture?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Keep one service but use a strategy pattern for each channel"
+      },
+      {
+        "key": "B",
+        "text": "Split into separate services per notification channel"
+      },
+      {
+        "key": "C",
+        "text": "Use an event bus — publish notification events, let channel-specific consumers handle delivery"
+      },
+      {
+        "key": "D",
+        "text": "Add the new channels as plugins to the existing service"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 78,
+    "reveal_summary": "An event-driven approach decouples notification routing from delivery. Each channel subscribes to notification events independently, making new channels trivial to add.",
+    "reveal_detail": "An event bus (e.g., SNS/SQS, Kafka) lets you publish a NotificationRequested event. Each channel (email, push, SMS, Slack, webhook) has its own consumer that subscribes and handles delivery independently. Benefits: adding a new channel requires zero changes to existing code — just deploy a new consumer. Each channel can scale, retry, and fail independently. The strategy pattern (A) works but keeps everything coupled in one deployment. Separate services (B) are overkill without the event bus.",
+    "tags": [
+      "event-driven",
+      "extensibility",
+      "notifications",
+      "pub-sub"
+    ],
+    "nudge_framework": "Open/Closed Principle",
+    "nudge_text": "Design so new channels can be added without modifying existing channels."
+  },
+  {
+    "domain": "incident-response",
+    "difficulty": 3,
+    "prompt": "Post-incident, the team discovers the root cause was a known issue that was deprioritized 6 months ago. How should the postmortem address this?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Add a risk scoring system to tech debt items so known risks are prioritized by impact"
+      },
+      {
+        "key": "B",
+        "text": "Blame the product manager for not prioritizing the fix"
+      },
+      {
+        "key": "C",
+        "text": "Create a policy requiring all known issues to be fixed within 30 days"
+      },
+      {
+        "key": "D",
+        "text": "Accept it as an acceptable risk that materialized — update the risk assessment"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 78,
+    "reveal_summary": "A risk scoring system (probability x impact) makes known issues visible as quantified risks, enabling informed prioritization decisions.",
+    "reveal_detail": "The issue isn't that the bug existed — it's that there was no framework to evaluate its risk. A risk score (e.g., likelihood x business impact x blast radius) transforms vague 'we should fix this someday' into quantified trade-offs: 'This has a 30% chance of causing a P1 incident costing $50K.' Product managers can then make informed priority decisions. A blanket 30-day policy (C) doesn't account for severity. Blaming individuals (B) isn't blameless. The risk did materialize (D), but the lesson is to improve the assessment process.",
+    "tags": [
+      "postmortem",
+      "risk-management",
+      "prioritization"
+    ],
+    "nudge_framework": "Expected Value",
+    "nudge_text": "Risk = probability x impact. Quantify both to prioritize effectively."
+  },
+  {
+    "domain": "performance",
+    "difficulty": 3,
+    "prompt": "Your PostgreSQL database has a query that JOINs 6 tables and takes 3 seconds. Adding more indexes doesn't help. What should you try next?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Denormalize — precompute the JOIN result in a materialized view"
+      },
+      {
+        "key": "B",
+        "text": "Increase PostgreSQL's work_mem setting"
+      },
+      {
+        "key": "C",
+        "text": "Split the query into multiple smaller queries and join in application code"
+      },
+      {
+        "key": "D",
+        "text": "Rewrite the query using subqueries instead of JOINs"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 75,
+    "reveal_summary": "A materialized view precomputes the 6-table JOIN once and refreshes periodically. Reads become simple single-table lookups.",
+    "reveal_detail": "When JOINing 6 tables, the optimizer has thousands of possible join orders and strategies. Even with good indexes, the sheer number of joins creates overhead. A materialized view trades write-time computation for read-time speed: refresh it every N minutes (or on trigger), and queries hit the precomputed result instead of 6 tables. work_mem helps with sort/hash operations but won't fix a fundamentally complex join. App-side joins (C) often perform worse due to N+1 patterns. Subqueries (D) may help but are plan-dependent.",
+    "tags": [
+      "materialized-views",
+      "denormalization",
+      "query-optimization"
+    ],
+    "nudge_framework": "Read vs Write Trade-off",
+    "nudge_text": "If you read far more than you write, precompute the expensive work at write time."
+  },
+  {
+    "domain": "code-review",
+    "difficulty": 4,
+    "prompt": "A PR implements retry logic for an HTTP client: on any error, retry up to 5 times with no delay. What's your main concern?",
+    "options": [
+      {
+        "key": "A",
+        "text": "No exponential backoff — rapid retries can overwhelm the downstream service"
+      },
+      {
+        "key": "B",
+        "text": "5 retries is too many — 3 is the standard"
+      },
+      {
+        "key": "C",
+        "text": "Retrying on all errors is wrong — some errors (400s) should not be retried"
+      },
+      {
+        "key": "D",
+        "text": "The retry logic should be in the server, not the client"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 82,
+    "reveal_summary": "Retrying 400-level errors (bad request, unauthorized, not found) is wasteful — they'll fail every time. Only retry transient errors (503, 429, network timeouts).",
+    "reveal_detail": "Client errors (4xx) indicate a problem with the request itself — retrying won't fix a 400 Bad Request or 404 Not Found. Only transient errors (503 Service Unavailable, 429 Too Many Requests, connection timeouts) are worth retrying. Additionally, the lack of backoff (option A) is a real concern — but the more fundamental issue is retrying errors that can never succeed. A good retry policy: only retry 5xx and network errors, with exponential backoff (1s, 2s, 4s) and jitter to prevent thundering herd.",
+    "tags": [
+      "retry-logic",
+      "error-classification",
+      "resilience"
+    ],
+    "nudge_framework": "Error Classification",
+    "nudge_text": "Not all errors are equal — transient errors deserve retries, permanent errors don't."
+  },
+  {
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Your registration form doesn't rate-limit account creation. An attacker creates 100,000 fake accounts. What's the primary business impact?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Fake accounts can be used for spam, abuse, and manipulation of community features"
+      },
+      {
+        "key": "B",
+        "text": "Database storage costs increase"
+      },
+      {
+        "key": "C",
+        "text": "Server load increases from the registration requests"
+      },
+      {
+        "key": "D",
+        "text": "Email delivery reputation is damaged from welcome emails to fake addresses"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 80,
+    "reveal_summary": "100K fake accounts enable platform abuse: spam, fake reviews, vote manipulation, referral fraud, and social engineering at scale.",
+    "reveal_detail": "Fake accounts are a gateway to platform abuse. Attackers use them for: spam messaging, fake reviews/ratings that manipulate trust, referral program abuse ($5/account x 100K = $500K fraud), scraping user data, and coordinating inauthentic behavior (fake votes, likes). Storage cost is negligible. Server load is temporary. Email reputation damage is real but secondary. Mitigations: rate limiting by IP, CAPTCHA, email/phone verification, behavioral analysis for suspicious patterns.",
+    "tags": [
+      "account-abuse",
+      "rate-limiting",
+      "fraud-prevention"
+    ],
+    "nudge_framework": "Downstream Impact",
+    "nudge_text": "The registration isn't the attack — it's what the attacker does with the accounts afterward."
+  },
+  {
+    "domain": "testing",
+    "difficulty": 2,
+    "prompt": "A developer argues that aiming for 100% code coverage is the right testing goal. What's the strongest counterargument?",
+    "options": [
+      {
+        "key": "A",
+        "text": "100% coverage doesn't mean 100% of behaviors are tested — coverage measures lines executed, not correctness"
+      },
+      {
+        "key": "B",
+        "text": "100% coverage is too expensive to achieve"
+      },
+      {
+        "key": "C",
+        "text": "Some code (like UI) can't be unit tested"
+      },
+      {
+        "key": "D",
+        "text": "High coverage makes refactoring harder because tests break"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 90,
+    "reveal_summary": "Code coverage measures which lines execute during tests, not whether the tests verify correct behavior. You can have 100% coverage with zero assertions.",
+    "reveal_detail": "Coverage is a measure of execution, not verification. A test that calls a function without checking its return value achieves coverage but catches no bugs. You can have 100% line coverage and still miss: edge cases (null inputs, empty arrays), race conditions, integration failures, and incorrect business logic. Coverage is useful as a floor ('we need at least 80%') but dangerous as a goal ('we need exactly 100%'). Focus on testing important behaviors and edge cases instead of chasing a coverage number.",
+    "tags": [
+      "code-coverage",
+      "testing-philosophy",
+      "false-confidence"
+    ],
+    "nudge_framework": "Goodhart's Law",
+    "nudge_text": "When a measure becomes a target, it ceases to be a good measure."
+  },
+  {
+    "domain": "deployment",
+    "difficulty": 4,
+    "prompt": "Your CI pipeline takes 25 minutes. Developers run it 50 times/day. The longest step is a full npm install (8 minutes). How do you most effectively speed it up?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Cache node_modules between CI runs based on package-lock.json hash"
+      },
+      {
+        "key": "B",
+        "text": "Use npm ci instead of npm install"
+      },
+      {
+        "key": "C",
+        "text": "Switch to pnpm for faster installs"
+      },
+      {
+        "key": "D",
+        "text": "Pre-bake a Docker image with dependencies installed"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 82,
+    "reveal_summary": "Caching node_modules (keyed on package-lock.json hash) skips the install step entirely when dependencies haven't changed — most runs need 0 seconds instead of 8 minutes.",
+    "reveal_detail": "Most CI runs don't change dependencies — the same package-lock.json means the same node_modules. By caching node_modules with a key derived from the lockfile hash, subsequent runs skip installation entirely. npm ci (option B) is already faster than npm install but still takes minutes. pnpm (C) is faster but not by enough. Pre-baked Docker (D) works but adds image management overhead. Caching gives the biggest win because it eliminates the step for ~90% of runs. All major CI systems (GitHub Actions, GitLab CI) support this natively.",
+    "tags": [
+      "ci-optimization",
+      "caching",
+      "developer-experience"
+    ],
+    "nudge_framework": "Eliminate, Don't Optimize",
+    "nudge_text": "The fastest code is code that doesn't run. Cache what doesn't change."
+  },
+  {
+    "domain": "tech-debt",
+    "difficulty": 5,
+    "prompt": "Your monolith has grown to 500K lines of code. Build times are 15 minutes. Multiple teams step on each other's code. What's the highest-impact first step toward decomposition?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Identify bounded contexts and establish module boundaries within the monolith first"
+      },
+      {
+        "key": "B",
+        "text": "Extract the highest-traffic service into a microservice"
+      },
+      {
+        "key": "C",
+        "text": "Rewrite the application from scratch with microservices"
+      },
+      {
+        "key": "D",
+        "text": "Split by team — each team gets their own service"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Before extracting services, define clear module boundaries within the monolith. This reduces risk, improves build times, and identifies natural service boundaries.",
+    "reveal_detail": "The modular monolith approach: (1) identify bounded contexts (user, payment, inventory, etc.), (2) enforce module boundaries via package structure and dependency rules (ArchUnit, eslint-plugin-boundaries), (3) make modules communicate through defined interfaces, not direct database queries. This gives most microservice benefits (team autonomy, faster builds, clear ownership) without the distributed system complexity. Once boundaries are proven, individual modules can be extracted to services if needed. Jumping straight to microservices often creates a distributed monolith.",
+    "tags": [
+      "monolith-decomposition",
+      "bounded-contexts",
+      "modular-architecture"
+    ],
+    "nudge_framework": "Modular Monolith First",
+    "nudge_text": "Establish boundaries in the monolith before extracting — it's reversible and lower risk."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 4,
+    "prompt": "Your WebSocket server handles 10K concurrent connections fine, but at 15K connections, new connections start failing. CPU and memory are under 50%. What's the likely bottleneck?",
+    "options": [
+      {
+        "key": "A",
+        "text": "File descriptor limit — each connection uses one, and the OS default is often 1024-65535"
+      },
+      {
+        "key": "B",
+        "text": "TCP port exhaustion on the server"
+      },
+      {
+        "key": "C",
+        "text": "The WebSocket library has a hardcoded connection limit"
+      },
+      {
+        "key": "D",
+        "text": "Network bandwidth is saturated"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Each TCP/WebSocket connection consumes a file descriptor. Linux defaults to 1024 (soft) or 65535 (hard). At 15K, you may be hitting the process or system limit.",
+    "reveal_detail": "The 'everything is a file' philosophy in Linux means each socket is a file descriptor. The per-process limit (ulimit -n) defaults to 1024, the system-wide limit (/proc/sys/fs/file-max) is higher but still finite. At 15K connections with some descriptors used for logs, pipes, and other I/O, you can exhaust the limit. Symptoms: 'Too many open files' errors in logs, new connections rejected while existing ones work fine. Fix: increase ulimit in the service configuration and raise the system file-max. CPU and memory being low is the key clue — it's a resource limit, not a capacity problem.",
+    "tags": [
+      "file-descriptors",
+      "websockets",
+      "linux",
+      "connection-limits"
+    ],
+    "nudge_framework": "Resource Limits",
+    "nudge_text": "When capacity metrics are fine but connections fail, check OS-level resource limits."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 1,
+    "prompt": "A frontend developer asks whether to put business logic in the React component or in a separate utility function. What's the best practice?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Separate it — business logic in pure functions, components handle rendering only"
+      },
+      {
+        "key": "B",
+        "text": "Keep it in the component — colocating logic is easier to follow"
+      },
+      {
+        "key": "C",
+        "text": "Put it in a custom hook so it's reusable"
+      },
+      {
+        "key": "D",
+        "text": "Put it in the API route — business logic belongs on the server"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 80,
+    "reveal_summary": "Pure functions for business logic are easier to test, reuse, and reason about. Components should focus on rendering and user interaction.",
+    "reveal_detail": "Separating business logic (price calculations, validation rules, data transformations) into pure functions gives you: (1) unit testability without rendering a component, (2) reuse across multiple components, (3) no dependency on React lifecycle, (4) easier refactoring. Components become thin — they call the logic functions and render the results. Custom hooks (C) are good for stateful logic tied to React, but pure business logic doesn't need hooks. Server-side (D) is right for sensitive logic but not for all business rules.",
+    "tags": [
+      "separation-of-concerns",
+      "react",
+      "testability",
+      "pure-functions"
+    ],
+    "nudge_framework": "Thin Controllers",
+    "nudge_text": "Components are like controllers — they orchestrate, not compute."
+  },
+  {
+    "domain": "incident-response",
+    "difficulty": 5,
+    "prompt": "Your payment processing service has a silent data corruption bug. Orders are being charged the wrong amount. You discover it affected ~2,000 orders over the past week. What's the priority?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Stop the bleeding — disable the affected code path, then quantify the damage"
+      },
+      {
+        "key": "B",
+        "text": "Identify the root cause before taking any action"
+      },
+      {
+        "key": "C",
+        "text": "Immediately refund all 2,000 affected orders"
+      },
+      {
+        "key": "D",
+        "text": "Notify all affected customers first"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "First, stop creating new bad orders by disabling the affected flow. Then quantify: how much overcharge/undercharge? Which orders? Only then can you plan the right remediation.",
+    "reveal_detail": "Incident response priority: contain, then assess, then remediate. Disabling the payment path stops new damage. Root cause investigation (B) is important but shouldn't delay containment. Refunding all orders (C) might be wrong — some might have been charged correctly, and blind refunds create accounting chaos. Customer notification (D) should come after you know what to say. After containment: analyze the 2,000 orders to determine overcharges vs undercharges, calculate financial impact, plan targeted refunds/charges, then notify customers with specific information.",
+    "tags": [
+      "data-corruption",
+      "payments",
+      "incident-priority",
+      "financial"
+    ],
+    "nudge_framework": "Contain, Assess, Remediate",
+    "nudge_text": "Stop the bleeding first. You can't fix what you're still breaking."
+  },
+  {
+    "domain": "code-review",
+    "difficulty": 5,
+    "prompt": "A PR introduces a distributed lock using Redis SETNX for coordinating access to a shared resource. The lock has no expiration. What's the critical bug?",
+    "options": [
+      {
+        "key": "A",
+        "text": "If the process holding the lock crashes, the lock is never released — deadlock"
+      },
+      {
+        "key": "B",
+        "text": "SETNX is not atomic in Redis Cluster"
+      },
+      {
+        "key": "C",
+        "text": "Redis might lose the key during failover"
+      },
+      {
+        "key": "D",
+        "text": "Multiple processes could acquire the lock simultaneously"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 92,
+    "reveal_summary": "Without an expiration (TTL), a crashed process leaves the lock held forever. No other process can acquire it — the system deadlocks permanently.",
+    "reveal_detail": "This is the fundamental distributed locking pitfall. If the process holding the lock crashes, OOMs, or loses network connectivity before releasing the lock, and there's no TTL, the lock remains in Redis indefinitely. The entire system grinds to a halt because no process can acquire the 'stuck' lock. Fix: always use SET key value EX seconds NX (SETNX + expiry atomically). The TTL should be longer than the expected operation but short enough to recover from crashes. Consider using Redlock for stronger guarantees. Option C is also valid but secondary to the deadlock issue.",
+    "tags": [
+      "distributed-locks",
+      "redis",
+      "deadlock",
+      "fault-tolerance"
+    ],
+    "nudge_framework": "Failure Recovery",
+    "nudge_text": "Every lock must answer: what happens if the holder crashes?"
+  },
+  {
+    "domain": "performance",
+    "difficulty": 1,
+    "prompt": "Your website loads a Google Font from fonts.googleapis.com. First-time visitors see a flash of unstyled text (FOUT). What's the simplest fix?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Self-host the font and add font-display: swap"
+      },
+      {
+        "key": "B",
+        "text": "Preconnect to fonts.googleapis.com"
+      },
+      {
+        "key": "C",
+        "text": "Inline the font as base64 in the CSS"
+      },
+      {
+        "key": "D",
+        "text": "Use only system fonts"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 78,
+    "reveal_summary": "Self-hosting eliminates the extra DNS lookup and connection to Google's servers. font-display: swap shows the fallback font immediately while the custom font loads.",
+    "reveal_detail": "Loading from Google Fonts requires: DNS lookup for fonts.googleapis.com, fetch CSS, DNS lookup for fonts.gstatic.com, fetch font files — multiple round trips. Self-hosting bundles fonts with your assets (same domain, same CDN, cached together). font-display: swap tells the browser to show text immediately with a fallback font, then swap to the custom font when loaded — eliminating FOUT. Preconnect helps but doesn't eliminate the extra origin. Base64 inlining bloats the CSS. System fonts work but limit design.",
+    "tags": [
+      "web-fonts",
+      "fout",
+      "performance",
+      "core-web-vitals"
+    ],
+    "nudge_framework": "Critical Rendering Path",
+    "nudge_text": "Every external origin adds latency. Self-host resources on the critical path."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 5,
+    "prompt": "A production Go service panics intermittently with 'concurrent map writes'. The map is protected by a sync.Mutex. What could still cause this?",
+    "options": [
+      {
+        "key": "A",
+        "text": "A code path accesses the map without acquiring the mutex first"
+      },
+      {
+        "key": "B",
+        "text": "sync.Mutex doesn't protect maps in Go"
+      },
+      {
+        "key": "C",
+        "text": "The map is shared across goroutines via closure capture without the mutex"
+      },
+      {
+        "key": "D",
+        "text": "The mutex is copied instead of passed by pointer, creating separate locks"
+      }
+    ],
+    "correct_option": "D",
+    "answer_defensibility": 80,
+    "reveal_summary": "Go mutexes must not be copied after first use. Passing a struct with a mutex by value creates a new mutex, so each copy has its own lock — no actual mutual exclusion.",
+    "reveal_detail": "In Go, sync.Mutex is a value type. If your struct containing the map and mutex is passed by value (e.g., assigned to a new variable, passed to a function without pointer), the mutex is copied. The original and copy have independent locks — locking one doesn't lock the other. Both goroutines think they have exclusive access but actually hold different mutexes. This is a notorious Go gotcha. Use go vet (reports 'copies lock value') and always pass mutex-containing structs by pointer. Options A and C are plausible but D is the most subtle and common Go-specific cause.",
+    "tags": [
+      "go",
+      "concurrency",
+      "mutex",
+      "value-semantics"
+    ],
+    "nudge_framework": "Language-Specific Gotchas",
+    "nudge_text": "In Go, value semantics mean copying a struct copies the mutex too — creating two independent locks."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 5,
+    "prompt": "You need to implement an idempotency layer for your payment API. A customer's retry shouldn't create a duplicate charge. What's the most robust approach?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Require clients to send an idempotency key; store and check it before processing"
+      },
+      {
+        "key": "B",
+        "text": "Deduplicate by checking if the same amount was charged in the last 5 minutes"
+      },
+      {
+        "key": "C",
+        "text": "Use database unique constraints on (customer_id, amount, timestamp window)"
+      },
+      {
+        "key": "D",
+        "text": "Make the charge operation inherently idempotent using a state machine"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "Client-provided idempotency keys (like Stripe's) let the server deterministically identify retry requests and return the original result without reprocessing.",
+    "reveal_detail": "The idempotency key pattern (used by Stripe, PayPal, AWS): (1) Client generates a unique key per logical operation, (2) Server stores the key + result on first processing, (3) On retry with the same key, server returns the stored result. This is robust because: the client controls retry identity, duplicate charges are impossible (same key = same result), and it works regardless of timing or amount. Amount-based dedup (B) fails when a customer legitimately makes two identical purchases. Unique constraints (C) are too fragile. State machines (D) complement but don't replace idempotency keys.",
+    "tags": [
+      "idempotency",
+      "payments",
+      "api-design",
+      "reliability"
+    ],
+    "nudge_framework": "Deterministic Identification",
+    "nudge_text": "Give each operation a unique ID so retries are indistinguishable from duplicates."
+  },
+  {
+    "domain": "testing",
+    "difficulty": 5,
+    "prompt": "Your API has a race condition that only manifests under concurrent load. Unit tests pass, integration tests pass. How do you write a test that catches this bug?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Write a concurrency test that spawns multiple threads hitting the same endpoint simultaneously"
+      },
+      {
+        "key": "B",
+        "text": "Use a fuzzer to generate random inputs"
+      },
+      {
+        "key": "C",
+        "text": "Add Thread.sleep() calls to slow down the code and expose the race"
+      },
+      {
+        "key": "D",
+        "text": "Use a model checker or property-based testing tool to explore execution interleavings"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 75,
+    "reveal_summary": "A concurrency test that fires parallel requests (e.g., 100 threads calling the endpoint simultaneously) can expose race conditions that sequential tests miss.",
+    "reveal_detail": "Race conditions require concurrent execution to manifest. A test that spawns N threads (e.g., 50-100) all calling the same endpoint with the same user/resource will expose data races, double-processing, and lost updates. Run it repeatedly (100+ iterations) since races are probabilistic. Example: 100 threads all increment a counter — assert the final value is exactly 100. If it's less, there's a race. Option D (model checkers like TLA+) is more thorough but much more complex. Thread.sleep (C) is brittle and unreliable.",
+    "tags": [
+      "concurrency-testing",
+      "race-conditions",
+      "load-testing"
+    ],
+    "nudge_framework": "Stress Testing",
+    "nudge_text": "If a bug only appears under load, your test must simulate load."
+  },
+  {
+    "domain": "deployment",
+    "difficulty": 3,
+    "prompt": "Your Vercel-deployed Next.js app has a serverless function that occasionally cold-starts in 5 seconds. Users see a loading spinner. What's the best mitigation?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Use Edge Runtime for latency-sensitive routes"
+      },
+      {
+        "key": "B",
+        "text": "Add a cron job to ping the function every 5 minutes to keep it warm"
+      },
+      {
+        "key": "C",
+        "text": "Move the logic to a client-side API call"
+      },
+      {
+        "key": "D",
+        "text": "Increase the function's memory allocation"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 80,
+    "reveal_summary": "Edge Runtime functions run in V8 isolates with near-zero cold start (< 50ms) compared to Node.js Lambda cold starts (1-5 seconds).",
+    "reveal_detail": "Vercel Edge Runtime uses lightweight V8 isolates instead of full Node.js containers. Cold starts are typically <50ms vs 1-5 seconds for serverless Node.js. The trade-off: Edge Runtime has limited APIs (no fs, no native modules, limited npm compatibility). For API routes that do data fetching, simple processing, and response formatting, Edge Runtime is ideal. Keep heavy computation (image processing, complex DB queries) in standard serverless functions. Warming pings (B) work but are a band-aid and don't scale.",
+    "tags": [
+      "edge-runtime",
+      "cold-starts",
+      "vercel",
+      "serverless"
+    ],
+    "nudge_framework": "Match the Runtime",
+    "nudge_text": "Choose the runtime that matches your latency requirements and API constraints."
+  },
+  {
+    "domain": "hiring",
+    "difficulty": 4,
+    "prompt": "Your team has a 'culture fit' interview round. Recent hires are all from similar backgrounds and think similarly. What should you change?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Replace 'culture fit' with 'culture add' — evaluate what new perspectives a candidate brings"
+      },
+      {
+        "key": "B",
+        "text": "Remove the culture interview entirely and focus only on technical skills"
+      },
+      {
+        "key": "C",
+        "text": "Add more interviewers to the culture round for diverse perspectives"
+      },
+      {
+        "key": "D",
+        "text": "Standardize culture fit questions to reduce interviewer bias"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "'Culture fit' often becomes 'someone like me'. 'Culture add' asks: what valuable perspectives, experiences, or approaches does this person bring that we don't have?",
+    "reveal_detail": "Research consistently shows that 'culture fit' interviews are the most bias-prone part of hiring. Interviewers unconsciously favor candidates who share their background, communication style, and interests. 'Culture add' reframes the question: instead of 'would I enjoy working with this person?' ask 'what does this person bring that we're missing?' This might be different industry experience, alternative problem-solving approaches, or underrepresented perspectives. Keep evaluating values alignment (integrity, collaboration) but separate it from homogeneity.",
+    "tags": [
+      "diversity",
+      "hiring-practices",
+      "bias",
+      "culture"
+    ],
+    "nudge_framework": "Cognitive Diversity",
+    "nudge_text": "Teams that think alike avoid conflict but also avoid innovation."
+  },
+  {
+    "domain": "tech-debt",
+    "difficulty": 1,
+    "prompt": "A function has 15 parameters. A coworker says 'it works, don't touch it.' What's the actual problem with leaving it?",
+    "options": [
+      {
+        "key": "A",
+        "text": "It's nearly impossible to call correctly — parameter order bugs are inevitable"
+      },
+      {
+        "key": "B",
+        "text": "It violates the rule of three parameters maximum"
+      },
+      {
+        "key": "C",
+        "text": "It's too slow — more parameters mean more memory usage"
+      },
+      {
+        "key": "D",
+        "text": "It makes the function harder to read but doesn't cause bugs"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "With 15 parameters, callers will mix up the order (especially when several are the same type), causing subtle bugs that compile and pass basic tests.",
+    "reveal_detail": "Imagine calling processOrder(id, userId, amount, tax, discount, shipping, status, priority, region, currency, ...). If you swap amount and tax (both numbers), the code compiles and might not crash — it just silently processes wrong values. Fix: group related parameters into objects (OrderDetails, ShippingInfo), use the builder pattern, or split the function by responsibility. The 'it works, don't touch it' defense ignores future maintenance costs and the bugs that will occur when the function is called incorrectly by new team members.",
+    "tags": [
+      "function-design",
+      "parameter-objects",
+      "maintainability"
+    ],
+    "nudge_framework": "Pit of Success",
+    "nudge_text": "Good APIs make it easy to do the right thing and hard to do the wrong thing."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 1,
+    "prompt": "Your git push is rejected with 'non-fast-forward'. What happened?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Someone else pushed to the same branch — your local branch is behind"
+      },
+      {
+        "key": "B",
+        "text": "Your SSH key has expired"
+      },
+      {
+        "key": "C",
+        "text": "The repository is read-only"
+      },
+      {
+        "key": "D",
+        "text": "You have merge conflicts in your files"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 92,
+    "reveal_summary": "The remote branch has commits your local branch doesn't have. Git rejects the push to prevent overwriting those commits.",
+    "reveal_detail": "A 'non-fast-forward' error means the remote branch has diverged from your local branch — someone pushed commits that you don't have locally. Git rejects the push because accepting it would erase those commits. Fix: git pull (or git pull --rebase to keep a linear history), resolve any conflicts, then push again. Never use git push --force on shared branches — it overwrites others' work. This is one of the most common git errors and understanding it prevents data loss.",
+    "tags": [
+      "git",
+      "collaboration",
+      "version-control"
+    ],
+    "nudge_framework": "Read the Error",
+    "nudge_text": "Git errors are descriptive — 'non-fast-forward' tells you exactly what's wrong."
+  },
+  {
+    "domain": "security",
+    "difficulty": 1,
+    "prompt": "A junior developer commits a .env file containing database credentials to the public GitHub repository. They delete it in the next commit. Is the secret safe?",
+    "options": [
+      {
+        "key": "A",
+        "text": "No — the secret is still in git history and publicly accessible"
+      },
+      {
+        "key": "B",
+        "text": "Yes — deleting the file removes it completely"
+      },
+      {
+        "key": "C",
+        "text": "It depends on whether anyone cloned the repo in between"
+      },
+      {
+        "key": "D",
+        "text": "Yes — GitHub automatically redacts secrets from history"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 95,
+    "reveal_summary": "Git stores every version of every file. Deleting a file only removes it from the current commit — the old commit with the secret remains in history forever.",
+    "reveal_detail": "Git is an append-only history. Anyone can run 'git log --all --full-history -- .env' or browse the commit history on GitHub to see the deleted file with all its secrets. Bots actively scan GitHub for accidentally committed credentials. The fix: (1) immediately rotate all exposed credentials, (2) use git-filter-branch or BFG Repo-Cleaner to remove the file from history, (3) force-push (coordinate with team), (4) add .env to .gitignore, (5) use pre-commit hooks (like git-secrets) to prevent future leaks.",
+    "tags": [
+      "git-history",
+      "secret-leakage",
+      "credential-rotation"
+    ],
+    "nudge_framework": "Immutable History",
+    "nudge_text": "Git never forgets. If a secret was committed, assume it's compromised."
+  },
+  {
+    "domain": "architecture",
+    "difficulty": 2,
+    "prompt": "Your REST API returns nested related objects (user → orders → items) in a single response, resulting in 5MB payloads. Mobile users complain about slow loading. What's the best solution?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Paginate the nested collections and let clients request deeper data on demand"
+      },
+      {
+        "key": "B",
+        "text": "Compress the response with gzip"
+      },
+      {
+        "key": "C",
+        "text": "Switch to GraphQL so clients request only what they need"
+      },
+      {
+        "key": "D",
+        "text": "Remove nested objects and require separate API calls"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 78,
+    "reveal_summary": "Paginate nested collections (e.g., return first 10 orders, link to the rest). Clients get small, fast initial responses and fetch more as needed.",
+    "reveal_detail": "5MB responses are excessive for mobile. Pagination at each nesting level (user with first 10 orders, each order with first 5 items, plus 'next' links) gives clients fast initial loads and control over what to fetch. gzip (B) helps (~70% compression) but 1.5MB is still large on 3G. GraphQL (C) solves over-fetching but is a major architectural change. Separate calls (D) causes N+1 problems. Cursor-based pagination with HATEOAS links is the REST-native solution that works well for mobile and desktop.",
+    "tags": [
+      "api-design",
+      "pagination",
+      "mobile-performance"
+    ],
+    "nudge_framework": "Progressive Loading",
+    "nudge_text": "Load what the user needs now; let them request more if they want it."
+  },
+  {
+    "domain": "incident-response",
+    "difficulty": 2,
+    "prompt": "Your monitoring dashboard shows all green, but users report they can't complete purchases. What does this indicate?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Your monitoring doesn't cover the user's critical path — you're measuring the wrong things"
+      },
+      {
+        "key": "B",
+        "text": "The users are probably on an old cached version of the app"
+      },
+      {
+        "key": "C",
+        "text": "The issue is on the client side, not the server"
+      },
+      {
+        "key": "D",
+        "text": "The monitoring system itself is broken"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "Green dashboards during user-reported outages = monitoring gap. You're likely measuring server health (CPU, memory) but not user-facing journeys (can they actually buy?).",
+    "reveal_detail": "This scenario reveals that your monitoring measures infrastructure health (servers up, CPU normal, APIs responding) but not business outcomes (checkout completion rate, payment success rate, cart-to-purchase conversion). A third-party payment provider could be down, a frontend bug could prevent the submit button from working, or a misconfigured firewall could block specific user segments. Add synthetic monitoring that completes the actual purchase flow end-to-end, and track business metrics (purchases/minute) as primary health indicators.",
+    "tags": [
+      "monitoring-gaps",
+      "synthetic-monitoring",
+      "business-metrics"
+    ],
+    "nudge_framework": "User-Centric Monitoring",
+    "nudge_text": "If your monitoring says everything's fine but users say it's broken — trust the users."
+  },
+  {
+    "domain": "testing",
+    "difficulty": 1,
+    "prompt": "Your unit test for a price calculator checks that calculateTotal(100, 0.1) returns 110. The test passes. Is this a good test?",
+    "options": [
+      {
+        "key": "A",
+        "text": "It's a start, but it only tests the happy path — add edge cases like 0, negative, and rounding scenarios"
+      },
+      {
+        "key": "B",
+        "text": "Yes — it verifies the core logic correctly"
+      },
+      {
+        "key": "C",
+        "text": "No — the expected value should be calculated, not hardcoded"
+      },
+      {
+        "key": "D",
+        "text": "No — it should test the function's internal implementation, not just output"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 85,
+    "reveal_summary": "One happy-path test gives false confidence. Price calculations break on edge cases: zero amounts, rounding (0.1 + 0.2 ≠ 0.3 in floats), discounts > price, currency precision.",
+    "reveal_detail": "calculateTotal(100, 0.1) = 110 is the case that works in literally any implementation, even buggy ones. The important tests are: calculateTotal(0, 0.1) — zero amount, calculateTotal(100, 0) — zero tax, calculateTotal(9.99, 0.0725) — floating point rounding (should be 10.71, not 10.714275), calculateTotal(-5, 0.1) — invalid input, calculateTotal(0.01, 0.1) — penny amounts. Financial code especially needs comprehensive edge case testing because rounding errors compound across thousands of transactions.",
+    "tags": [
+      "test-coverage",
+      "edge-cases",
+      "financial-calculations"
+    ],
+    "nudge_framework": "Boundary Value Analysis",
+    "nudge_text": "The happy path is the least valuable test — bugs live at the boundaries."
+  },
+  {
+    "domain": "code-review",
+    "difficulty": 1,
+    "prompt": "A PR adds console.log statements throughout production code for debugging. The developer says they'll remove them later. What's your feedback?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Remove them now — use a proper logging library with log levels instead"
+      },
+      {
+        "key": "B",
+        "text": "Approve it — they promised to clean up"
+      },
+      {
+        "key": "C",
+        "text": "Comment them out instead of removing"
+      },
+      {
+        "key": "D",
+        "text": "Wrap them in if(DEBUG) conditions"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 90,
+    "reveal_summary": "console.log in production: no log levels, no structured data, can leak sensitive info, clutters the console. Use a logging library (winston, pino) with levels (debug, info, error).",
+    "reveal_detail": "console.log problems: (1) no log levels — you can't filter debug noise from real errors, (2) no structured output — hard to search/aggregate in log management tools, (3) can accidentally log sensitive data (user tokens, PII), (4) 'I'll remove them later' becomes permanent tech debt. A proper logger: logger.debug('Processing order', { orderId }) in development, disabled in production. This gives you debugging when needed and clean production logs. Never merge 'temporary' debug code.",
+    "tags": [
+      "logging",
+      "code-quality",
+      "debugging-practices"
+    ],
+    "nudge_framework": "No Temporary Solutions",
+    "nudge_text": "There's nothing more permanent than a temporary solution."
+  },
+  {
+    "domain": "deployment",
+    "difficulty": 1,
+    "prompt": "Your .gitignore doesn't include node_modules/. A developer commits the entire folder (300MB). What's the immediate problem?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Repository bloat — git history permanently stores those 300MB, slowing clone and fetch for everyone"
+      },
+      {
+        "key": "B",
+        "text": "Merge conflicts in node_modules files"
+      },
+      {
+        "key": "C",
+        "text": "Different team members will have different dependency versions"
+      },
+      {
+        "key": "D",
+        "text": "npm install won't work correctly with committed modules"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "300MB of binary files in git history can never be fully removed (without rewriting history). Every clone downloads it, permanently slowing repository operations.",
+    "reveal_detail": "Git stores file content permanently in its history. Even if you delete node_modules in the next commit, those 300MB remain in git's object store. Every developer cloning the repo downloads the full history including the bloated commit. Fix: (1) add node_modules/ to .gitignore immediately, (2) git rm -r --cached node_modules && git commit, (3) if the repo is already bloated, use git-filter-repo or BFG Repo-Cleaner to rewrite history. Prevention: always set up .gitignore with node_modules/ before the first commit.",
+    "tags": [
+      "gitignore",
+      "repository-management",
+      "node-modules"
+    ],
+    "nudge_framework": "Prevention Over Cure",
+    "nudge_text": "A .gitignore template at project creation prevents hours of cleanup later."
+  },
+  {
+    "domain": "hiring",
+    "difficulty": 1,
+    "prompt": "You're writing a job description for a mid-level React developer. It lists 15 'required' skills including Kubernetes, AWS, ML, and GraphQL. What's wrong?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The requirements describe a senior/staff engineer — no mid-level candidate will apply"
+      },
+      {
+        "key": "B",
+        "text": "Too many required skills discourages qualified candidates who lack one or two"
+      },
+      {
+        "key": "C",
+        "text": "Kubernetes and ML are irrelevant for a React role"
+      },
+      {
+        "key": "D",
+        "text": "The description should focus on outcomes, not technologies"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 80,
+    "reveal_summary": "Studies show qualified candidates (especially women and underrepresented groups) self-select out when they don't meet 100% of listed requirements. Keep required skills to 5-6 must-haves.",
+    "reveal_detail": "HP's internal research found that women apply for jobs when they meet 100% of requirements, while men apply at 60%. A 15-item requirements list filters out great candidates who could learn the missing skills quickly. Fix: split into 'Required' (5-6 core skills they must have day one) and 'Nice to have' (skills they can learn on the job). For a mid-level React role, required might be: React, TypeScript, CSS, REST APIs, Git. Everything else is learnable. Long requirements lists don't find better candidates — they find fewer candidates.",
+    "tags": [
+      "job-descriptions",
+      "hiring-funnel",
+      "inclusivity"
+    ],
+    "nudge_framework": "Minimum Viable Requirements",
+    "nudge_text": "List what they need on day one. Everything else is 'nice to have' or trainable."
+  },
+  {
+    "domain": "tech-debt",
+    "difficulty": 3,
+    "prompt": "Your team's sprint retrospective keeps identifying the same problem: 'too much context switching between projects.' Nothing changes. What's the systemic fix?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Limit work-in-progress (WIP) — each developer works on one project at a time"
+      },
+      {
+        "key": "B",
+        "text": "Create a dedicated 'interrupts' role that rotates weekly"
+      },
+      {
+        "key": "C",
+        "text": "Block calendar time for focused work"
+      },
+      {
+        "key": "D",
+        "text": "Move to longer sprint cycles to reduce context switches"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 80,
+    "reveal_summary": "WIP limits force prioritization. Instead of 3 developers each juggling 4 projects, assign one project per developer. Throughput improves even though fewer items are 'in progress'.",
+    "reveal_detail": "Context switching has a hidden cost: research shows it takes 15-25 minutes to regain focus after switching tasks. A developer on 4 projects loses hours daily to mental setup/teardown. WIP limits (from Kanban/Lean): each person has at most 1-2 active items. This feels counterintuitive ('but we have 12 priorities!') but increases throughput because items are completed faster. Option B helps with ad-hoc interrupts. Calendar blocking (C) is individual, not systemic. Longer sprints (D) don't reduce within-sprint switching.",
+    "tags": [
+      "wip-limits",
+      "context-switching",
+      "team-productivity"
+    ],
+    "nudge_framework": "Little's Law",
+    "nudge_text": "Lead time = WIP / throughput. Reduce WIP to reduce lead time."
+  },
+  {
+    "domain": "debugging",
+    "difficulty": 3,
+    "prompt": "Your TypeScript application compiles without errors but crashes at runtime with 'Cannot read properties of undefined'. The variable has a non-optional type. How is this possible?",
+    "options": [
+      {
+        "key": "A",
+        "text": "TypeScript types are erased at runtime — a type assertion (as Type) bypassed the type check"
+      },
+      {
+        "key": "B",
+        "text": "The TypeScript compiler has a bug"
+      },
+      {
+        "key": "C",
+        "text": "The JavaScript engine handles types differently than TypeScript"
+      },
+      {
+        "key": "D",
+        "text": "A third-party library returned undefined despite its type declaration saying otherwise"
+      }
+    ],
+    "correct_option": "D",
+    "answer_defensibility": 72,
+    "reveal_summary": "Type declarations (.d.ts) for libraries can be wrong or outdated. The library returns undefined at runtime even though TypeScript's types say it won't.",
+    "reveal_detail": "TypeScript's type system is structural and compile-time only — it trusts type declarations. If a library's @types package declares a function returns string but the actual runtime code returns string | undefined, TypeScript won't catch it. Common sources: outdated @types packages, incorrect manual type assertions (as SomeType), any types propagating through the codebase, and API responses that don't match their type definitions. Option A is also valid (type assertions are another common cause). Defense: validate data at system boundaries with runtime checks (Zod, io-ts).",
+    "tags": [
+      "typescript",
+      "runtime-errors",
+      "type-safety",
+      "type-declarations"
+    ],
+    "nudge_framework": "Trust Boundaries",
+    "nudge_text": "TypeScript guarantees types within your code — but not at the boundaries with external data."
+  },
+  {
+    "domain": "performance",
+    "difficulty": 4,
+    "prompt": "Your React app re-renders the entire page when a single item in a list of 500 updates. React.memo is applied to list items but doesn't help. What's the cause?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The list items receive a new object/array reference as props on every parent render"
+      },
+      {
+        "key": "B",
+        "text": "React.memo doesn't work with list items"
+      },
+      {
+        "key": "C",
+        "text": "The key prop is changing on every render"
+      },
+      {
+        "key": "D",
+        "text": "The list component itself isn't memoized"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "React.memo does shallow comparison. If parent creates new objects/arrays/callbacks inline, every child receives 'new' props and re-renders despite memo.",
+    "reveal_detail": "React.memo compares props with shallow equality (===). If the parent does <Item data={{...item}} onClick={() => handleClick(item.id)} />, both data and onClick are new references every render — React.memo sees them as changed and re-renders. Fix: (1) useMemo/useCallback for derived objects and callbacks, (2) pass primitive props instead of objects when possible, (3) use a state management library that provides stable references (Zustand, Jotai). Key changes (C) would unmount/remount, which is a different symptom. React DevTools Profiler's 'Why did this render?' reveals the culprit props.",
+    "tags": [
+      "react",
+      "memoization",
+      "referential-equality",
+      "re-renders"
+    ],
+    "nudge_framework": "Reference Stability",
+    "nudge_text": "Shallow comparison means {} !== {} — even identical objects are 'different' to React.memo."
+  },
+  {
+    "domain": "security",
+    "difficulty": 3,
+    "prompt": "Your Next.js app uses dangerouslySetInnerHTML to render user-generated rich text from a CMS. The CMS 'sanitizes' the content. Is this safe?",
+    "options": [
+      {
+        "key": "A",
+        "text": "No — always sanitize on the rendering side, never trust the data source"
+      },
+      {
+        "key": "B",
+        "text": "Yes — if the CMS sanitizes, you don't need to sanitize again"
+      },
+      {
+        "key": "C",
+        "text": "It depends on which CMS and its sanitization quality"
+      },
+      {
+        "key": "D",
+        "text": "Yes — dangerouslySetInnerHTML is safe for trusted content"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 88,
+    "reveal_summary": "Defense in depth: sanitize at the rendering layer regardless of what upstream claims. CMS sanitization can be bypassed, misconfigured, or have bugs.",
+    "reveal_detail": "Trusting upstream sanitization is risky because: (1) the CMS might have sanitization bypasses, (2) someone might change CMS settings, (3) data might be modified between CMS and your app, (4) the CMS sanitization might not cover all XSS vectors your rendering context is vulnerable to. Always sanitize with DOMPurify or similar on the rendering side. The 'dangerously' in dangerouslySetInnerHTML is a warning — treat it as: 'this renders raw HTML, you MUST sanitize the input.' Cost of sanitizing twice: negligible. Cost of XSS: severe.",
+    "tags": [
+      "xss",
+      "sanitization",
+      "defense-in-depth",
+      "cms"
+    ],
+    "nudge_framework": "Defense in Depth",
+    "nudge_text": "Never rely on a single layer of defense — sanitize at every trust boundary."
+  }
+]
