@@ -48,6 +48,49 @@ function accuracyLabel(score: number): string {
   return "Needs work";
 }
 
+type CalibrationVerdict = {
+  verdict: string;
+  bg: string;
+  color: string;
+  why: string;
+};
+
+function getCalibrationVerdict(
+  label: ScoreBreakdown["feedbackLabel"],
+  isAmbiguous: boolean
+): CalibrationVerdict {
+  switch (label) {
+    case "correct_calibrated":
+      return {
+        verdict: "Well-calibrated",
+        bg: "bg-green-900/30",
+        color: "text-green-400",
+        why: "Your confidence matched your outcome — that's good calibration.",
+      };
+    case "correct_overconfident":
+      return {
+        verdict: "Overconfident",
+        bg: "bg-amber-900/30",
+        color: "text-amber-400",
+        why: "You got it right, but at that confidence level you should be right nearly every time. Calibration is measured over many attempts.",
+      };
+    case "wrong_overconfident":
+      return {
+        verdict: "Overconfident",
+        bg: isAmbiguous ? "bg-amber-900/30" : "bg-red-900/30",
+        color: isAmbiguous ? "text-amber-400" : "text-red-400",
+        why: "High confidence with a wrong answer is where calibration breaks down most.",
+      };
+    case "wrong_underconfident":
+      return {
+        verdict: "Underconfident",
+        bg: "bg-blue-900/30",
+        color: "text-blue-400",
+        why: "You got it wrong but kept your confidence reasonable — that's appropriate uncertainty.",
+      };
+  }
+}
+
 export default function RevealScreen({
   scenario,
   chosenOption,
@@ -67,6 +110,7 @@ export default function RevealScreen({
   const { showToast } = useToast();
   const isCorrect = chosenOption === scenario.correct_option;
   const isAmbiguous = scenario.answer_defensibility < 60;
+  const calibration = getCalibrationVerdict(scoreBreakdown.feedbackLabel, isAmbiguous);
 
   const handleFlagSubmit = async () => {
     if (!flagReason || submittingFlag) return;
@@ -111,52 +155,32 @@ export default function RevealScreen({
     showToast("Saved to your playbook", "success");
   };
 
-  // Soft reveal: verdict text varies by defensibility
-  const verdictText = () => {
-    if (isCorrect) return "Correct";
-    if (isAmbiguous) return "Not the suggested best answer";
-    return "Wrong";
-  };
-
-  const verdictSubtext = () => {
-    if (isAmbiguous && !isCorrect) {
-      return "This question has a debatable answer — reasonable people disagree.";
-    }
-    return scoreBreakdown.feedbackText;
-  };
-
   return (
     <div className="bg-gray-900 rounded-2xl shadow-lg p-6 max-w-lg mx-auto w-full space-y-5">
-      {/* Result header */}
-      <div
-        className={`text-center p-4 rounded-xl ${
-          isCorrect
-            ? "bg-green-900/30"
-            : isAmbiguous
-            ? "bg-yellow-900/30"
-            : "bg-red-900/30"
-        }`}
-      >
-        <div className="text-3xl mb-1">{verdictText()}</div>
-        <p
-          className={`text-sm font-medium ${
-            isCorrect
-              ? "text-green-400"
-              : isAmbiguous
-              ? "text-yellow-400"
-              : "text-red-400"
-          }`}
-        >
-          {verdictSubtext()}
+      {/* Result header — calibration verdict is primary */}
+      <div className={`text-center p-4 rounded-xl ${calibration.bg}`}>
+        <div className={`text-3xl font-bold mb-1 ${calibration.color}`}>
+          {calibration.verdict}
+        </div>
+        <p className={`text-sm ${calibration.color} opacity-80 mb-2`}>
+          {calibration.why}
         </p>
-        <div className="flex items-center justify-center gap-1 mt-1">
-          <p className="text-xs text-gray-400">
+        <p className="text-sm text-gray-400">
+          Answer:{" "}
+          {isCorrect
+            ? "✓ Correct"
+            : isAmbiguous
+            ? "Not the suggested best"
+            : "✗ Incorrect"}
+        </p>
+        <div className="flex items-center justify-center gap-1 mt-2">
+          <p className="text-xs text-gray-500">
             Your confidence: {confidence}%
           </p>
           <span className="text-gray-600 text-xs">|</span>
           <button
             onClick={() => setShowAccuracyInfo(!showAccuracyInfo)}
-            className="text-xs text-gray-400 hover:text-gray-200 underline decoration-dotted underline-offset-2 transition-colors"
+            className="text-xs text-gray-500 hover:text-gray-300 underline decoration-dotted underline-offset-2 transition-colors"
           >
             Accuracy Score: {scoreBreakdown.accuracyScore} — {accuracyLabel(scoreBreakdown.accuracyScore)}
           </button>

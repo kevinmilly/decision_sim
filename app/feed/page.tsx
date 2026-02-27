@@ -4,14 +4,13 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/lib/session";
-import { scoreAttempt, avgBrierScore, brierToAccuracyScore, dailyTargetToCards } from "@/lib/scoring";
+import { scoreAttempt, dailyTargetToCards } from "@/lib/scoring";
 import { track } from "@/lib/analytics";
 import { queueAttempt, flushQueue } from "@/lib/offline-queue";
 import { useToast } from "@/components/Toast";
 import ScenarioCard from "@/components/ScenarioCard";
 import ConfidenceSlider from "@/components/ConfidenceSlider";
 import RevealScreen from "@/components/RevealScreen";
-import SessionComplete from "@/components/SessionComplete";
 import EmptyState from "@/components/EmptyState";
 import Tutorial from "@/components/Tutorial";
 import type { ScoreBreakdown } from "@/lib/scoring";
@@ -33,7 +32,7 @@ interface Scenario {
   tags: string[];
 }
 
-type Phase = "tutorial" | "card" | "confidence" | "reveal" | "session_complete" | "empty";
+type Phase = "tutorial" | "card" | "confidence" | "reveal" | "empty";
 
 interface AttemptRecord {
   confidence: number;
@@ -61,6 +60,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [dailyGoalReached, setDailyGoalReached] = useState(false);
 
   // Load scenarios and user profile
   useEffect(() => {
@@ -213,8 +213,8 @@ export default function FeedPage() {
   const handleNext = useCallback(() => {
     recordActivity();
 
-    if (sessionAttempts.length >= dailyTarget) {
-      setPhase("session_complete");
+    if (sessionAttempts.length >= dailyTarget && !dailyGoalReached) {
+      setDailyGoalReached(true);
       track("session_completed", {
         session_id: sessionId,
         attempts_count: sessionAttempts.length,
@@ -222,7 +222,6 @@ export default function FeedPage() {
           sessionAttempts.filter((a) => a.isCorrect).length /
           sessionAttempts.length,
       });
-      return;
     }
 
     const nextIndex = currentIndex + 1;
@@ -237,24 +236,10 @@ export default function FeedPage() {
     setConfidence(0);
     setScoreBreakdown(null);
     setPhase("card");
-  }, [currentIndex, scenarios.length, sessionAttempts, dailyTarget, sessionId, recordActivity]);
-
-  const handleContinue = () => {
-    const nextIndex = currentIndex + 1;
-    if (nextIndex >= scenarios.length) {
-      setPhase("empty");
-      return;
-    }
-    setCurrentIndex(nextIndex);
-    setSelectedOption(null);
-    setResponseTimeMs(0);
-    setConfidence(0);
-    setScoreBreakdown(null);
-    setPhase("card");
-  };
+  }, [currentIndex, scenarios.length, sessionAttempts, dailyTarget, dailyGoalReached, sessionId, recordActivity]);
 
   const handleExitSession = () => {
-    if (sessionAttempts.length > 0) {
+    if (sessionAttempts.length > 0 && !dailyGoalReached) {
       track("session_completed", {
         session_id: sessionId,
         attempts_count: sessionAttempts.length,
@@ -279,7 +264,7 @@ export default function FeedPage() {
   return (
     <main className="min-h-screen flex flex-col">
       {/* Top bar */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-gray-800 sticky top-0 z-10 bg-gray-950">
         <h1 className="font-bold text-white">Judgment Gym</h1>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-400">
@@ -300,6 +285,30 @@ export default function FeedPage() {
           </button>
         </div>
       </header>
+
+      {/* Daily goal reached banner */}
+      {dailyGoalReached && (
+        <div className="bg-green-950/60 border-b border-green-800/40 px-4 py-2 flex items-center justify-between">
+          <span className="text-sm text-green-400 font-medium">
+            Daily calibration target reached — keep going or review your stats
+          </span>
+          <div className="flex items-center gap-3 ml-3 shrink-0">
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="text-sm text-green-400 font-semibold hover:text-green-300 underline underline-offset-2"
+            >
+              View stats
+            </button>
+            <button
+              onClick={() => setDailyGoalReached(false)}
+              className="text-gray-500 hover:text-gray-300 text-lg leading-none"
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Exit confirmation modal */}
       {showExitConfirm && (
@@ -360,18 +369,6 @@ export default function FeedPage() {
             scoreBreakdown={scoreBreakdown}
             onNext={handleNext}
             onSaveFramework={handleSaveFramework}
-          />
-        )}
-
-        {phase === "session_complete" && (
-          <SessionComplete
-            totalAttempts={sessionAttempts.length}
-            correctCount={
-              sessionAttempts.filter((a) => a.isCorrect).length
-            }
-            avgAccuracyScore={brierToAccuracyScore(avgBrierScore(sessionAttempts))}
-            onContinue={handleContinue}
-            onDone={() => router.push("/dashboard")}
           />
         )}
 

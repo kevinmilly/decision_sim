@@ -6,7 +6,7 @@ export type FeedbackLabel =
 
 export interface AttemptResult {
   isCorrect: boolean;
-  confidence: number; // 50–95
+  confidence: number; // 25–95
   responseTimeMs: number;
 }
 

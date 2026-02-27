@@ -7,8 +7,13 @@ interface ConfidenceSliderProps {
 }
 
 const LABELS: Record<number, string> = {
+  25: "Random guess",
+  30: "Slight lean",
+  35: "Leaning",
+  40: "Some confidence",
+  45: "Moderate lean",
   50: "Coin flip",
-  55: "Slight lean",
+  55: "Slight edge",
   60: "Somewhat confident",
   65: "Moderately confident",
   70: "Fairly confident",
@@ -54,7 +59,7 @@ export default function ConfidenceSlider({ onSubmit }: ConfidenceSliderProps) {
         <div className="px-2">
           <input
             type="range"
-            min={50}
+            min={25}
             max={95}
             step={5}
             value={confidence}
@@ -62,7 +67,7 @@ export default function ConfidenceSlider({ onSubmit }: ConfidenceSliderProps) {
             className="w-full"
           />
           <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>50%</span>
+            <span>25%</span>
             <span>95%</span>
           </div>
         </div>
