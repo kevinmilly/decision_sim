@@ -1,0 +1,452 @@
+[
+  {
+    "domain": "prioritization",
+    "difficulty": 2,
+    "prompt": "Your backlog has 40 items. Engineering has capacity for 5 next sprint. A top customer is asking for a niche feature, your CEO wants a redesign, and your data shows a checkout bug costing 8% conversion. What do you prioritize?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The CEO's redesign — executive alignment is critical"
+      },
+      {
+        "key": "B",
+        "text": "The customer's feature — retention matters more than acquisition"
+      },
+      {
+        "key": "C",
+        "text": "The checkout bug — 8% conversion loss directly impacts revenue"
+      },
+      {
+        "key": "D",
+        "text": "A mix of all three to keep stakeholders happy"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 88,
+    "reveal_summary": "Revenue-impacting bugs outrank feature requests. A known 8% conversion drop has a calculable, immediate cost — fix that first.",
+    "reveal_detail": "The checkout bug has a measurable revenue impact right now. Every day it ships, you lose money. Feature requests — even from the CEO or top customers — are about future value, which is inherently uncertain. Prioritization frameworks like RICE or ICE would rank a high-confidence, high-impact bug fix above speculative features. Splitting capacity across all three is classic prioritization avoidance and produces nothing well.",
+    "tags": ["prioritization", "revenue", "stakeholders"],
+    "nudge_framework": "RICE Score",
+    "nudge_text": "Reach × Impact × Confidence / Effort — what scores highest here?"
+  },
+  {
+    "domain": "stakeholder-management",
+    "difficulty": 3,
+    "prompt": "Engineering says a feature will take 6 weeks. Sales already promised it to a key prospect in 3 weeks. The deal is worth $200K. What do you do?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Tell sales to renegotiate the timeline with the prospect"
+      },
+      {
+        "key": "B",
+        "text": "Pressure engineering to cut scope and ship something in 3 weeks"
+      },
+      {
+        "key": "C",
+        "text": "Explore what subset of the feature could ship in 3 weeks and align all parties"
+      },
+      {
+        "key": "D",
+        "text": "Escalate to the CEO to make the call"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 82,
+    "reveal_summary": "Find the minimal viable version that satisfies the prospect and negotiate that scope explicitly with engineering and sales.",
+    "reveal_detail": "PMs sit at the intersection of sales, engineering, and customers. Telling sales to 'just fix it' abdicates your role. Blindly pressuring engineering destroys trust and leads to technical debt or burnout. Escalating immediately to the CEO is lazy delegation. The right move is to facilitate: what's the smallest thing that could close the deal? Can engineering ship a partial version with manual workarounds for the rest? Align on that, set realistic expectations, and protect the team.",
+    "tags": ["stakeholders", "sales", "negotiation"],
+    "nudge_framework": "Constraint Mapping",
+    "nudge_text": "Which constraint is actually fixed — the timeline, the scope, or the deal terms?"
+  },
+  {
+    "domain": "metrics",
+    "difficulty": 2,
+    "prompt": "Your DAU went up 20% last month. Your CEO is excited. You look closer and see retention at day-30 dropped from 40% to 28%. What's actually happening?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Growth is healthy — more users means more revenue"
+      },
+      {
+        "key": "B",
+        "text": "Acquisition is working but retention is broken — you're filling a leaky bucket"
+      },
+      {
+        "key": "C",
+        "text": "The DAU spike is a data anomaly and should be investigated"
+      },
+      {
+        "key": "D",
+        "text": "A 20% DAU increase outweighs a retention dip at this stage"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 91,
+    "reveal_summary": "Rising DAU with falling retention means you're acquiring users faster than you're losing them — temporarily. The leaky bucket will catch up.",
+    "reveal_detail": "This is one of the most common traps in growth metrics. A DAU spike masks a retention collapse. If day-30 retention dropped 12 points, you're losing nearly a third more of your users than before. That means your LTV is shrinking even as acquisition accelerates. Eventually, the churn rate catches up and DAU flatlines or drops. The fix is to prioritize retention — understand why users are leaving at day 30 — before scaling acquisition further.",
+    "tags": ["metrics", "retention", "growth"],
+    "nudge_framework": "North Star vs. Vanity Metrics",
+    "nudge_text": "Is DAU telling you something real, or is it hiding a bigger problem?"
+  },
+  {
+    "domain": "discovery",
+    "difficulty": 2,
+    "prompt": "You run a user interview and 8 of 10 users say they want a dark mode. What should you do next?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Add dark mode to the roadmap — clear user demand"
+      },
+      {
+        "key": "B",
+        "text": "Ask what problem dark mode solves for them before committing"
+      },
+      {
+        "key": "C",
+        "text": "Check analytics to see how many users work at night"
+      },
+      {
+        "key": "D",
+        "text": "Run a survey to a larger sample before deciding"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 85,
+    "reveal_summary": "Users ask for solutions, not problems. Dig into why they want dark mode — the underlying need may point to a better solution.",
+    "reveal_detail": "This is the classic Henry Ford 'faster horse' trap. Users said dark mode but what they might mean is: eye strain during long sessions, battery concerns on mobile, or wanting to use your app in low-light environments. Dark mode might be the right answer — but so might better contrast ratios, a focus mode, or a mobile app. Understanding the underlying problem before committing to a solution is core to good product discovery. Always ask 'why' before 'what'.",
+    "tags": ["discovery", "user-research", "requirements"],
+    "nudge_framework": "Jobs To Be Done",
+    "nudge_text": "What job is the user hiring dark mode to do?"
+  },
+  {
+    "domain": "roadmap",
+    "difficulty": 3,
+    "prompt": "You have a quarterly roadmap agreed upon by leadership. Three weeks in, a competitor ships a feature your top customers are asking about. What do you do?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Immediately reprioritize to match the competitor's feature"
+      },
+      {
+        "key": "B",
+        "text": "Stay the course — reactive strategy leads to copycat products"
+      },
+      {
+        "key": "C",
+        "text": "Assess the actual churn risk, gather customer signal, then make a deliberate call"
+      },
+      {
+        "key": "D",
+        "text": "Ask engineering to squeeze it in alongside current work"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 87,
+    "reveal_summary": "Competitor moves warrant investigation, not automatic reaction. Quantify the risk before changing course.",
+    "reveal_detail": "Reflexively chasing competitors is a trap — you end up building their roadmap instead of yours. But ignoring real churn signals is also dangerous. The right move is rapid triage: talk to the customers making noise, check if this is a deal-breaker or a nice-to-have, and estimate the revenue at risk. If the signal is strong, bring a data-backed case to leadership to adjust the roadmap deliberately. If it's noise, document it and move on. 'Squeezing it in' is how you burn out teams and ship half-baked features.",
+    "tags": ["roadmap", "competition", "strategy"],
+    "nudge_framework": "Opportunity Cost",
+    "nudge_text": "What does reacting cost you — and what does not reacting cost you?"
+  },
+  {
+    "domain": "launch",
+    "difficulty": 2,
+    "prompt": "Your team is ready to ship a major new feature. QA passed. What should happen before you flip the flag to 100% of users?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Ship to everyone — QA sign-off is sufficient"
+      },
+      {
+        "key": "B",
+        "text": "Do a staged rollout starting with a small percentage of users"
+      },
+      {
+        "key": "C",
+        "text": "Send a launch email to all users first to set expectations"
+      },
+      {
+        "key": "D",
+        "text": "Wait for the next sprint to make sure nothing else is in-flight"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 90,
+    "reveal_summary": "Staged rollouts let you catch real-world issues at scale before they affect all users — QA doesn't replicate production conditions.",
+    "reveal_detail": "QA tests known scenarios. Production has unknown edge cases: unusual devices, network conditions, data states, and usage patterns QA never anticipated. A staged rollout (1% → 10% → 50% → 100%) lets you monitor error rates, performance, and user behavior at each stage before full exposure. If something breaks, you roll back before most users are affected. This is standard practice at any company operating at scale. Emailing users first doesn't reduce risk — it just raises expectations before you've confirmed it works.",
+    "tags": ["launch", "risk-management", "rollout"],
+    "nudge_framework": "Reversibility",
+    "nudge_text": "How easily can you undo this if something goes wrong at scale?"
+  },
+  {
+    "domain": "prioritization",
+    "difficulty": 3,
+    "prompt": "You're a PM at a Series B startup. Your two biggest bets this quarter: rebuild the onboarding flow (will improve activation by ~15% per experiments) or build an enterprise SSO feature (one specific $500K deal depends on it). You only have engineering capacity for one. Which do you choose?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Onboarding — systematic activation improvement outweighs one deal"
+      },
+      {
+        "key": "B",
+        "text": "SSO — $500K in ARR is concrete and immediate"
+      },
+      {
+        "key": "C",
+        "text": "Negotiate with the customer to delay the SSO requirement"
+      },
+      {
+        "key": "D",
+        "text": "Split the team and do both at reduced quality"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 72,
+    "reveal_summary": "At Series B, concrete ARR from a signed deal often outweighs probabilistic activation gains — especially if enterprise is your target segment.",
+    "reveal_detail": "This is genuinely hard and context-dependent, which is why defensibility is lower. But at Series B, runway and revenue milestones dominate. A $500K deal is real money with a real close date. The 15% activation improvement is valuable but probabilistic — it assumes the experiment generalizes, that activation is the bottleneck to revenue, and that the gain compounds fast enough to matter. If enterprise is your ICP, SSO also unblocks a whole segment, not just one deal. Splitting the team is tempting but usually produces two mediocre outcomes instead of one good one.",
+    "tags": ["prioritization", "enterprise", "revenue"],
+    "nudge_framework": "Expected Value",
+    "nudge_text": "Calculate the expected value of each path — probability × magnitude."
+  },
+  {
+    "domain": "stakeholder-management",
+    "difficulty": 2,
+    "prompt": "An engineering lead tells you a feature you've committed to in the roadmap is technically not feasible as designed. The quarter is 6 weeks away from ending. What's your first move?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Tell stakeholders the feature is delayed"
+      },
+      {
+        "key": "B",
+        "text": "Work with engineering to understand what IS feasible and reframe the deliverable"
+      },
+      {
+        "key": "C",
+        "text": "Find a different engineer who can make it work"
+      },
+      {
+        "key": "D",
+        "text": "Ask engineering to document the constraints and escalate to leadership"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 86,
+    "reveal_summary": "Before escalating or communicating externally, understand what's possible. Reframe the deliverable around constraints, not around the original spec.",
+    "reveal_detail": "Immediately telling stakeholders it's delayed is premature — you haven't explored the solution space yet. Finding another engineer is disrespectful and usually ineffective. Escalating before you understand the problem makes you look reactive. The right first move is a working session with engineering: what specifically is infeasible? What's the closest achievable version? Can you deliver the user value a different way? Once you have options, you can have an informed conversation with stakeholders about tradeoffs — not just bad news.",
+    "tags": ["engineering", "stakeholders", "scoping"],
+    "nudge_framework": "Problem vs. Solution",
+    "nudge_text": "The spec is a solution — what's the underlying problem you still need to solve?"
+  },
+  {
+    "domain": "metrics",
+    "difficulty": 3,
+    "prompt": "You launch a new feature. Engagement with it is high, but overall product NPS drops 6 points the same week. What's your hypothesis?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The NPS drop is unrelated — survey timing was coincidental"
+      },
+      {
+        "key": "B",
+        "text": "The feature is engaging but introducing friction or confusion elsewhere"
+      },
+      {
+        "key": "C",
+        "text": "High engagement means users like it — NPS will recover"
+      },
+      {
+        "key": "D",
+        "text": "The NPS sample size is too small to be meaningful"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 80,
+    "reveal_summary": "High engagement + falling NPS suggests the feature is used but creates problems — confusion, disruption to existing workflows, or unmet expectations.",
+    "reveal_detail": "Engagement tells you users are interacting with the feature. NPS tells you how they feel about the overall product. These can conflict when a feature is prominent enough to drive engagement but introduces friction, changes familiar patterns, or fails to deliver on its implicit promise. The right move is to segment the NPS responses: are the detractors the same users using the new feature? Look at qualitative feedback. Don't dismiss NPS as noise without investigating — correlated signals at the same time as a launch are rarely coincidental.",
+    "tags": ["metrics", "NPS", "feature-impact"],
+    "nudge_framework": "Correlation vs. Causation",
+    "nudge_text": "Are these two signals connected — and if so, how?"
+  },
+  {
+    "domain": "discovery",
+    "difficulty": 3,
+    "prompt": "You're doing discovery for a B2B product. You've interviewed 6 customers and all 6 say pricing is their biggest pain point. Should you lower prices?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Yes — 6/6 is overwhelming signal"
+      },
+      {
+        "key": "B",
+        "text": "No — customers always say pricing is a problem, even when it isn't the real blocker"
+      },
+      {
+        "key": "C",
+        "text": "Investigate whether pricing is the real blocker or a proxy for perceived value"
+      },
+      {
+        "key": "D",
+        "text": "Run a pricing experiment with a discount for the next cohort"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 84,
+    "reveal_summary": "Customers say 'price' but often mean 'I don't see enough value.' Dig into whether the problem is cost or perceived ROI.",
+    "reveal_detail": "In B2B sales, 'it's too expensive' is one of the most common objections — and one of the least reliable signals. Customers may use price as a safe, socially acceptable way to decline when the real issue is unclear ROI, lack of internal buy-in, or incomplete trust. A product that delivers clear, measurable value rarely loses on price. Before cutting prices, ask: are customers who do pay staying and expanding? Are lost deals actually going to cheaper competitors, or just stalling? The diagnosis matters — lowering prices to fix a value perception problem just reduces margin.",
+    "tags": ["discovery", "pricing", "B2B"],
+    "nudge_framework": "5 Whys",
+    "nudge_text": "Why do they say pricing? Why is that the constraint? Keep asking."
+  },
+  {
+    "domain": "roadmap",
+    "difficulty": 2,
+    "prompt": "You have strong opinions about what to build next quarter. Your engineering lead disagrees and thinks your top item is low value. How do you handle it?",
+    "options": [
+      {
+        "key": "A",
+        "text": "You're the PM — make the call and move forward"
+      },
+      {
+        "key": "B",
+        "text": "Defer to engineering since they know the technical complexity better"
+      },
+      {
+        "key": "C",
+        "text": "Share your evidence and listen to theirs — align on shared goals before deciding"
+      },
+      {
+        "key": "D",
+        "text": "Escalate to leadership to break the tie"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 89,
+    "reveal_summary": "Disagreement between PM and engineering is healthy. The resolution is shared evidence and shared goals — not authority or avoidance.",
+    "reveal_detail": "PMs don't have authority over engineers — they have influence. Pulling rank poisons relationships and rarely produces good outcomes. Deferring entirely abdicates your role. Escalating immediately is lazy and makes you look unable to handle conflict. The right approach is a structured conversation: share your data (user research, metrics, business case) and invite theirs (complexity, risk, opportunity cost). Often the disagreement is about assumptions, not values. When you find what you both want — better product outcomes — you can usually find common ground on how to get there.",
+    "tags": ["collaboration", "engineering", "leadership"],
+    "nudge_framework": "Disagree and Commit",
+    "nudge_text": "Is this a disagreement about facts, values, or priorities?"
+  },
+  {
+    "domain": "launch",
+    "difficulty": 3,
+    "prompt": "One week before launch, a key engineer says there's a performance issue under load — response times spike to 4 seconds at 500 concurrent users. Your current peak is 300. Do you delay?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Launch as planned — you rarely hit peak load at launch"
+      },
+      {
+        "key": "B",
+        "text": "Delay until the performance issue is fixed"
+      },
+      {
+        "key": "C",
+        "text": "Launch with a rate limit or load cap, monitor closely, and fix in parallel"
+      },
+      {
+        "key": "D",
+        "text": "Do a smaller beta launch to stay under the 300-user threshold"
+      }
+    ],
+    "correct_option": "C",
+    "answer_defensibility": 78,
+    "reveal_summary": "A controlled launch with guardrails lets you ship on schedule while managing real risk — neither ignoring the issue nor letting it block you.",
+    "reveal_detail": "Launching blind to a known performance cliff is reckless. But delaying a week before launch is expensive — there are comms, sales commitments, and team morale at stake. The nuanced move is to ship with guardrails: rate limit new signups, add alerting at 80% of the danger threshold, and have an incident plan ready. Meanwhile, the engineer works the fix in parallel. This is how mature teams handle known-but-manageable risk. A beta launch (option D) is similar but may disappoint stakeholders expecting full launch.",
+    "tags": ["launch", "performance", "risk-management"],
+    "nudge_framework": "Risk vs. Reversibility",
+    "nudge_text": "What's the worst realistic outcome — and can you recover from it quickly?"
+  },
+  {
+    "domain": "prioritization",
+    "difficulty": 1,
+    "prompt": "A sales rep asks you to add a small one-off customization for a single enterprise prospect. It would take 2 days of engineering. What's the most important question to ask first?",
+    "options": [
+      {
+        "key": "A",
+        "text": "How big is the deal?"
+      },
+      {
+        "key": "B",
+        "text": "Would this customization be useful to other customers too?"
+      },
+      {
+        "key": "C",
+        "text": "Can engineering fit it into the current sprint?"
+      },
+      {
+        "key": "D",
+        "text": "Has the prospect signed a contract yet?"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 83,
+    "reveal_summary": "The key question is generalizability — one-off customizations create long-term maintenance debt unless they solve a broader problem.",
+    "reveal_detail": "Deal size matters, but it's not the first question. The real risk of one-off customizations is that they proliferate. Each one adds maintenance burden, makes the codebase more complex, and sets a precedent for future requests. If the feature would benefit 20% of your customer base, it's a product decision — build it properly. If it's truly one-off, it might belong in a professional services engagement or a configuration option, not the core product. Ask generalizability first; deal size informs urgency after.",
+    "tags": ["prioritization", "enterprise", "customization"],
+    "nudge_framework": "Second-Order Thinking",
+    "nudge_text": "If you do this once, what happens the 10th time a different customer asks?"
+  },
+  {
+    "domain": "metrics",
+    "difficulty": 2,
+    "prompt": "Your weekly active users are flat for 3 months despite a steady stream of new signups. What's the most likely explanation?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Your marketing targeting is off and new users aren't a good fit"
+      },
+      {
+        "key": "B",
+        "text": "Churn is matching new user growth — the product isn't retaining users"
+      },
+      {
+        "key": "C",
+        "text": "WAU is a lagging indicator — growth will appear in the next few months"
+      },
+      {
+        "key": "D",
+        "text": "Seasonality is suppressing engagement"
+      }
+    ],
+    "correct_option": "B",
+    "answer_defensibility": 87,
+    "reveal_summary": "Flat WAU with steady signups is the classic leaky bucket: churn rate equals acquisition rate, meaning you're not retaining what you acquire.",
+    "reveal_detail": "If new users are coming in but WAU stays flat, users must be leaving at the same rate. This is the leaky bucket problem. No amount of acquisition fixes a retention problem — you'll just work harder to stay in place. The right diagnosis is to look at cohort retention curves: are users from 3 months ago still active? What's the day-7, day-30 dropoff? Identify where users disengage and why. Only once retention improves does acquisition spending compound into real growth.",
+    "tags": ["metrics", "retention", "growth"],
+    "nudge_framework": "Cohort Analysis",
+    "nudge_text": "Break WAU down by signup cohort — are older cohorts still active?"
+  },
+  {
+    "domain": "discovery",
+    "difficulty": 1,
+    "prompt": "Your team wants to ship a feature because a competitor has it. What should you validate before putting it on the roadmap?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Whether your users have the same need the competitor's feature addresses"
+      },
+      {
+        "key": "B",
+        "text": "Whether you can build it faster than the competitor iterated on it"
+      },
+      {
+        "key": "C",
+        "text": "Whether the competitor's feature is well-reviewed"
+      },
+      {
+        "key": "D",
+        "text": "Whether the feature fits your current tech stack"
+      }
+    ],
+    "correct_option": "A",
+    "answer_defensibility": 92,
+    "reveal_summary": "Competitor features are hypotheses, not requirements. Validate that your users actually have the same underlying need before committing.",
+    "reveal_detail": "Building because a competitor has something is one of the most common ways product teams lose focus. The competitor may have built it for a different customer segment, as a sales tool, or based on their own flawed assumptions. The only question that matters is whether your users have a real, unmet need that this feature addresses. If the answer is yes and the feature fits your strategy, build it. If the answer is unclear, do discovery first. Competitive parity is sometimes necessary — but it should be a deliberate strategic choice, not a reflex.",
+    "tags": ["discovery", "competition", "strategy"],
+    "nudge_framework": "Customer-First Thinking",
+    "nudge_text": "Is this for your users — or for your ego?"
+  }
+]

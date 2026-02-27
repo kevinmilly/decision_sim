@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { brierToAccuracyScore } from "@/lib/scoring";
 import DashboardCharts from "@/components/DashboardCharts";
 
 interface TrendDataPoint {
@@ -24,8 +25,8 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({
     totalAttempts: 0,
     avgAccuracy: 0,
-    avgBrier: 0,
-    overconfidenceIndex: 0,
+    avgAccuracyScore: 0,
+    confidenceGap: 0,
     streak: 0,
   });
   const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
@@ -55,8 +56,8 @@ export default function DashboardPage() {
         setStats({
           totalAttempts: userStats.total_attempts,
           avgAccuracy: parseFloat(userStats.avg_accuracy || "0"),
-          avgBrier: parseFloat(userStats.brier_score || "0"),
-          overconfidenceIndex: parseFloat(userStats.overconfidence_index || "0"),
+          avgAccuracyScore: brierToAccuracyScore(parseFloat(userStats.brier_score || "0")),
+          confidenceGap: parseFloat(userStats.overconfidence_index || "0"),
           streak: userStats.streak_current || 0,
         });
       }
@@ -197,10 +198,10 @@ export default function DashboardPage() {
           <DashboardCharts
             trendData={trendData}
             tagPerformance={tagPerformance}
-            overconfidenceIndex={stats.overconfidenceIndex}
+            confidenceGap={stats.confidenceGap}
             totalAttempts={stats.totalAttempts}
             avgAccuracy={stats.avgAccuracy}
-            avgBrier={stats.avgBrier}
+            avgAccuracyScore={stats.avgAccuracyScore}
             streak={stats.streak}
           />
         )}

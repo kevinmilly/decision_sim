@@ -11,11 +11,20 @@ export interface AttemptResult {
 }
 
 export interface ScoreBreakdown {
-  brierScore: number;
+  brierScore: number;      // internal; lower is better
+  accuracyScore: number;   // 0–100, higher is better; derived from brier
   feedbackLabel: FeedbackLabel;
   feedbackText: string;
   calibrationDelta: number; // positive = overconfident
   speedBucket: "fast" | "moderate" | "slow";
+}
+
+/**
+ * Convert a Brier score to a 0–100 Accuracy Score.
+ * brier 0 → 100 (perfect), brier 1 → 0 (worst).
+ */
+export function brierToAccuracyScore(brier: number): number {
+  return Math.round(Math.max(0, Math.min(100, 100 * (1 - brier))));
 }
 
 /**
@@ -135,6 +144,7 @@ export function scoreAttempt(
 
   return {
     brierScore: bs,
+    accuracyScore: brierToAccuracyScore(bs),
     feedbackLabel: label,
     feedbackText: getFeedbackText(label),
     calibrationDelta,

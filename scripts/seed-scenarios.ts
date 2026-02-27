@@ -2,7 +2,7 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -33,18 +33,11 @@ interface SeedScenario {
   nudge_text?: string;
 }
 
-async function seed() {
-  const filePath = join(
-    __dirname,
-    "..",
-    "content",
-    "seeds",
-    "software-engineering.json"
-  );
+async function seedFile(filePath: string, fileName: string) {
   const raw = readFileSync(filePath, "utf-8");
   const scenarios: SeedScenario[] = JSON.parse(raw);
 
-  console.log(`Seeding ${scenarios.length} scenarios...`);
+  console.log(`\n[${fileName}] Seeding ${scenarios.length} scenarios...`);
 
   const rows = scenarios.map((s) => ({
     ...s,
@@ -56,13 +49,29 @@ async function seed() {
     const batch = rows.slice(i, i + 25);
     const { error } = await supabase.from("scenarios").insert(batch);
     if (error) {
-      console.error(`Error inserting batch at index ${i}:`, error);
+      console.error(`[${fileName}] Error inserting batch at index ${i}:`, error);
       process.exit(1);
     }
-    console.log(`Inserted ${Math.min(i + 25, rows.length)} / ${rows.length}`);
+    console.log(`[${fileName}] Inserted ${Math.min(i + 25, rows.length)} / ${rows.length}`);
+  }
+}
+
+async function seed() {
+  const seedsDir = join(__dirname, "..", "content", "seeds");
+  const files = readdirSync(seedsDir).filter((f) => f.endsWith(".json"));
+
+  if (files.length === 0) {
+    console.error("No seed files found in content/seeds/");
+    process.exit(1);
   }
 
-  console.log("Seeding complete!");
+  console.log(`Found ${files.length} seed file(s): ${files.join(", ")}`);
+
+  for (const file of files) {
+    await seedFile(join(seedsDir, file), file);
+  }
+
+  console.log("\nSeeding complete!");
 }
 
 seed().catch(console.error);

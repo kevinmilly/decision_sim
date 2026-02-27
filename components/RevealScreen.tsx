@@ -41,10 +41,10 @@ const FLAG_REASONS = [
 
 type FlagReason = (typeof FLAG_REASONS)[number]["value"];
 
-function brierLabel(brier: number): string {
-  if (brier <= 0.05) return "Excellent";
-  if (brier <= 0.15) return "Good";
-  if (brier <= 0.3) return "Fair";
+function accuracyLabel(score: number): string {
+  if (score >= 95) return "Excellent";
+  if (score >= 85) return "Good";
+  if (score >= 70) return "Fair";
   return "Needs work";
 }
 
@@ -57,7 +57,7 @@ export default function RevealScreen({
   onSaveFramework,
 }: RevealScreenProps) {
   const [showDetail, setShowDetail] = useState(false);
-  const [showBrierInfo, setShowBrierInfo] = useState(false);
+  const [showAccuracyInfo, setShowAccuracyInfo] = useState(false);
   const [flagged, setFlagged] = useState(false);
   const [showFlagMenu, setShowFlagMenu] = useState(false);
   const [flagReason, setFlagReason] = useState<FlagReason | null>(null);
@@ -155,10 +155,10 @@ export default function RevealScreen({
           </p>
           <span className="text-gray-600 text-xs">|</span>
           <button
-            onClick={() => setShowBrierInfo(!showBrierInfo)}
+            onClick={() => setShowAccuracyInfo(!showAccuracyInfo)}
             className="text-xs text-gray-400 hover:text-gray-200 underline decoration-dotted underline-offset-2 transition-colors"
           >
-            Brier: {scoreBreakdown.brierScore.toFixed(3)} — {brierLabel(scoreBreakdown.brierScore)}
+            Accuracy Score: {scoreBreakdown.accuracyScore} — {accuracyLabel(scoreBreakdown.accuracyScore)}
           </button>
         </div>
         {isAmbiguous && !isCorrect && (
@@ -166,17 +166,20 @@ export default function RevealScreen({
             Score penalty reduced for this ambiguous question
           </p>
         )}
-        {showBrierInfo && (
+        {showAccuracyInfo && (
           <div className="mt-3 p-3 bg-gray-800/60 rounded-lg text-xs text-gray-300 text-left leading-relaxed">
-            <p className="font-semibold text-gray-200 mb-1">What is a Brier Score?</p>
+            <p className="font-semibold text-gray-200 mb-1">What is Accuracy Score?</p>
             <p>
-              It measures how well your confidence matches reality. A score of <strong>0.0</strong> means
-              perfect calibration (you were 100% confident and correct). A score of <strong>1.0</strong> means
-              maximally wrong. Being correct with low confidence or wrong with high confidence both raise
+              It measures how well your confidence matches reality. A score of <strong>100</strong> means
+              perfect calibration (you were confident and correct). A score of <strong>0</strong> means
+              maximally wrong. Being correct with low confidence or wrong with high confidence both lower
               your score.
             </p>
             <p className="mt-1 text-gray-400">
               Think of it as: <em>did you know what you knew?</em>
+            </p>
+            <p className="mt-1 text-gray-500 text-[10px]">
+              Advanced: Accuracy Score is based on Brier error, a standard probability scoring method. Brier error: {scoreBreakdown.brierScore.toFixed(3)} (lower is better).
             </p>
           </div>
         )}

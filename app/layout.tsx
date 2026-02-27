@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "The Pause — Decision Calibration",
-  description: "Train your engineering judgment with real-world scenarios",
+  title: "Judgment Gym — Decision Calibration",
+  description: "Train your judgment with real-world scenarios. Make a call, set confidence, and learn how calibrated you are.",
   manifest: "/manifest.json",
 };
 

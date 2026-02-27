@@ -28,7 +28,7 @@ const STEPS = [
   {
     title: "Learn from the reveal",
     description:
-      "See if you were right, read the explanation, and check your calibration score. Save useful frameworks to your playbook for later.",
+      "See if you were right, read the explanation, and check your Accuracy Score (0–100, higher is better). Save useful frameworks to your playbook for later.",
     visual: "reveal",
   },
 ];
@@ -119,7 +119,7 @@ export default function Tutorial({ onComplete }: TutorialProps) {
               The correct answer <span className="text-green-400 ml-1 text-xs">CORRECT</span>
             </div>
             <div className="text-xs text-gray-400">
-              Brier Score: 0.063 — <span className="text-brand-400 underline decoration-dotted">What&apos;s this?</span>
+              Accuracy Score: 94 — <span className="text-brand-400 underline decoration-dotted">What&apos;s this?</span>
             </div>
           </div>
         )}

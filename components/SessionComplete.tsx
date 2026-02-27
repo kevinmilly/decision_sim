@@ -5,26 +5,26 @@ import { useState } from "react";
 interface SessionCompleteProps {
   totalAttempts: number;
   correctCount: number;
-  avgBrier: number;
+  avgAccuracyScore: number;
   onContinue: () => void;
   onDone: () => void;
 }
 
-function brierLabel(brier: number): string {
-  if (brier <= 0.05) return "Excellent calibration";
-  if (brier <= 0.15) return "Good calibration";
-  if (brier <= 0.3) return "Fair calibration";
+function accuracyLabel(score: number): string {
+  if (score >= 95) return "Excellent calibration";
+  if (score >= 85) return "Good calibration";
+  if (score >= 70) return "Fair calibration";
   return "Room to improve";
 }
 
 export default function SessionComplete({
   totalAttempts,
   correctCount,
-  avgBrier,
+  avgAccuracyScore,
   onContinue,
   onDone,
 }: SessionCompleteProps) {
-  const [showBrierInfo, setShowBrierInfo] = useState(false);
+  const [showAccuracyInfo, setShowAccuracyInfo] = useState(false);
   const accuracy = totalAttempts > 0 ? (correctCount / totalAttempts) * 100 : 0;
 
   return (
@@ -47,25 +47,25 @@ export default function SessionComplete({
         </div>
         <div className="bg-gray-800 rounded-xl p-4">
           <p className="text-2xl font-bold text-purple-400">
-            {avgBrier.toFixed(2)}
+            {avgAccuracyScore}
           </p>
           <button
-            onClick={() => setShowBrierInfo(!showBrierInfo)}
+            onClick={() => setShowAccuracyInfo(!showAccuracyInfo)}
             className="text-xs text-gray-400 underline decoration-dotted underline-offset-2 hover:text-gray-200"
           >
-            Calibration
+            Accuracy Score
           </button>
         </div>
       </div>
 
-      {showBrierInfo && (
+      {showAccuracyInfo && (
         <div className="bg-gray-800/60 rounded-xl p-4 text-sm text-gray-300 text-left leading-relaxed">
           <p className="font-semibold text-gray-200 mb-1">
-            Your Brier Score: {avgBrier.toFixed(3)} — {brierLabel(avgBrier)}
+            Accuracy Score: {avgAccuracyScore} — {accuracyLabel(avgAccuracyScore)}
           </p>
           <p>
             This measures how well your confidence matches your actual accuracy.
-            Lower is better — <strong>0.0</strong> is perfect, <strong>0.25</strong> is like guessing randomly.
+            Higher is better — <strong>100</strong> is perfect, <strong>75</strong> is like guessing randomly.
             The goal isn&apos;t just to be right, but to <em>know when you&apos;re right</em>.
           </p>
         </div>

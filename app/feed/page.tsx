@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/lib/session";
-import { scoreAttempt, avgBrierScore, dailyTargetToCards } from "@/lib/scoring";
+import { scoreAttempt, avgBrierScore, brierToAccuracyScore, dailyTargetToCards } from "@/lib/scoring";
 import { track } from "@/lib/analytics";
 import { queueAttempt, flushQueue } from "@/lib/offline-queue";
 import { useToast } from "@/components/Toast";
@@ -280,7 +280,7 @@ export default function FeedPage() {
     <main className="min-h-screen flex flex-col">
       {/* Top bar */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
-        <h1 className="font-bold text-white">The Pause</h1>
+        <h1 className="font-bold text-white">Judgment Gym</h1>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-400">
             {sessionAttempts.length}/{dailyTarget}
@@ -369,7 +369,7 @@ export default function FeedPage() {
             correctCount={
               sessionAttempts.filter((a) => a.isCorrect).length
             }
-            avgBrier={avgBrierScore(sessionAttempts)}
+            avgAccuracyScore={brierToAccuracyScore(avgBrierScore(sessionAttempts))}
             onContinue={handleContinue}
             onDone={() => router.push("/dashboard")}
           />

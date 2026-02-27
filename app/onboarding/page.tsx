@@ -5,13 +5,13 @@ export default function OnboardingPage() {
     <main className="min-h-screen flex flex-col justify-center py-12">
       <div className="text-center mb-8 px-4">
         <h1 className="text-4xl font-bold text-white mb-2">
-          The Pause
+          Judgment Gym
         </h1>
         <p className="text-gray-400 text-lg mb-1">
-          Better satisfying the itch than scratching it.
+          Decision Calibration
         </p>
         <p className="text-gray-500 text-sm">
-          Train your engineering judgment — one decision at a time.
+          Make a call, set your confidence, and learn how accurate your gut really is.
         </p>
       </div>
       <OnboardingForm />

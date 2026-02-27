@@ -27,24 +27,24 @@ interface TagPerformance {
 interface DashboardChartsProps {
   trendData: TrendDataPoint[];
   tagPerformance: TagPerformance[];
-  overconfidenceIndex: number;
+  confidenceGap: number;
   totalAttempts: number;
   avgAccuracy: number;
-  avgBrier: number;
+  avgAccuracyScore: number;
   streak: number;
 }
 
-function brierLabel(brier: number): string {
-  if (brier <= 0.05) return "Excellent";
-  if (brier <= 0.15) return "Good";
-  if (brier <= 0.3) return "Fair";
+function accuracyScoreLabel(score: number): string {
+  if (score >= 95) return "Excellent";
+  if (score >= 85) return "Good";
+  if (score >= 70) return "Fair";
   return "Needs work";
 }
 
-function brierColor(brier: number): string {
-  if (brier <= 0.05) return "text-green-400";
-  if (brier <= 0.15) return "text-blue-400";
-  if (brier <= 0.3) return "text-yellow-400";
+function accuracyScoreColor(score: number): string {
+  if (score >= 95) return "text-green-400";
+  if (score >= 85) return "text-blue-400";
+  if (score >= 70) return "text-yellow-400";
   return "text-red-400";
 }
 
@@ -78,13 +78,13 @@ function useCountUp(target: number, duration = 800, decimals = 0): string {
 export default function DashboardCharts({
   trendData,
   tagPerformance,
-  overconfidenceIndex,
+  confidenceGap,
   totalAttempts,
   avgAccuracy,
-  avgBrier,
+  avgAccuracyScore,
   streak,
 }: DashboardChartsProps) {
-  const [showBrierInfo, setShowBrierInfo] = useState(false);
+  const [showAccuracyInfo, setShowAccuracyInfo] = useState(false);
 
   // ── Fix: prevent overlap between strengths and blind spots ───────
   const sortedTags = [...tagPerformance].sort(
@@ -133,12 +133,11 @@ export default function DashboardCharts({
           }
         />
         <StatCard
-          label="Calibration"
-          rawValue={avgBrier}
-          decimals={3}
-          subtext={brierLabel(avgBrier)}
-          subtextClass={brierColor(avgBrier)}
-          onClick={() => setShowBrierInfo(!showBrierInfo)}
+          label="Accuracy Score"
+          rawValue={avgAccuracyScore}
+          subtext={accuracyScoreLabel(avgAccuracyScore)}
+          subtextClass={accuracyScoreColor(avgAccuracyScore)}
+          onClick={() => setShowAccuracyInfo(!showAccuracyInfo)}
           icon={
             <svg className="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -157,41 +156,43 @@ export default function DashboardCharts({
         />
       </div>
 
-      {/* Brier score explainer */}
-      {showBrierInfo && (
+      {/* Accuracy Score explainer */}
+      {showAccuracyInfo && (
         <div className="dash-fade-in bg-gray-800/60 backdrop-blur rounded-xl p-4 text-sm text-gray-300 leading-relaxed border border-gray-700/50">
           <p className="font-semibold text-gray-200 mb-1">
-            About Your Calibration Score (Brier Score)
+            About Your Accuracy Score
           </p>
           <p>
-            This number captures how well your confidence tracks reality. Lower
-            is better.
+            This captures how well your confidence tracks reality. Higher is better (0–100).
           </p>
           <ul className="mt-2 space-y-1 text-gray-400">
             <li>
-              <strong className="text-green-400">0.00 - 0.05</strong> —
+              <strong className="text-green-400">95 – 100</strong> —
               Excellent. You know what you know.
             </li>
             <li>
-              <strong className="text-blue-400">0.05 - 0.15</strong> — Good.
+              <strong className="text-blue-400">85 – 94</strong> — Good.
               Solid self-awareness.
             </li>
             <li>
-              <strong className="text-yellow-400">0.15 - 0.30</strong> — Fair.
+              <strong className="text-yellow-400">70 – 84</strong> — Fair.
               Confidence often mismatches outcomes.
             </li>
             <li>
-              <strong className="text-red-400">0.30+</strong> — Needs work.
+              <strong className="text-red-400">0 – 69</strong> — Needs work.
               Systematically miscalibrated.
             </li>
           </ul>
+          <p className="mt-2 text-gray-500 text-xs">
+            Advanced: Accuracy Score is based on Brier error, a standard probability scoring method.
+          </p>
         </div>
       )}
 
-      {/* Confidence calibration gauge */}
+      {/* Confidence Gap gauge */}
       <div className="dash-slide-up bg-gray-900 rounded-xl p-4 border border-gray-800/50">
         <h3 className="text-sm font-semibold text-gray-300 mb-3">
-          Confidence Calibration
+          Confidence Gap
         </h3>
         <div className="flex items-center gap-3">
           <div className="flex-1 h-4 rounded-full relative overflow-hidden bg-gray-800">
@@ -208,7 +209,7 @@ export default function DashboardCharts({
             <div
               className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-lg shadow-white/30 transition-all duration-700 ease-out ring-2 ring-white/40"
               style={{
-                left: `calc(${Math.min(Math.max((overconfidenceIndex + 0.5) * 100, 2), 98)}% - 6px)`,
+                left: `calc(${Math.min(Math.max((confidenceGap + 0.5) * 100, 2), 98)}% - 6px)`,
               }}
             />
             {/* Center line */}
@@ -216,15 +217,15 @@ export default function DashboardCharts({
           </div>
           <span
             className={`text-sm font-mono w-16 text-right font-semibold ${
-              Math.abs(overconfidenceIndex) < 0.05
+              Math.abs(confidenceGap) < 0.05
                 ? "text-green-400"
-                : overconfidenceIndex > 0
+                : confidenceGap > 0
                   ? "text-red-400"
                   : "text-blue-400"
             }`}
           >
-            {overconfidenceIndex > 0 ? "+" : ""}
-            {(overconfidenceIndex * 100).toFixed(1)}%
+            {confidenceGap > 0 ? "+" : ""}
+            {(confidenceGap * 100).toFixed(1)}%
           </span>
         </div>
         <div className="flex justify-between text-xs text-gray-500 mt-1.5">
